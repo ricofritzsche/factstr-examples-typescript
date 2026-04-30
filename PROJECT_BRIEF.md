@@ -8,22 +8,37 @@
 
 Build a dedicated TypeScript example repository for FACTSTR.
 
-This repository should show how to build small, realistic TypeScript applications with `@factstr/factstr-node` while keeping the structure aligned with:
+This repository exists to show how to build small, realistic TypeScript applications with `@factstr/factstr-node` while keeping the structure aligned with:
 
 * functional core / imperative shell
 * self-contained feature slices
 * explicit event shapes
 * query-defined consistency
+* plain TypeScript
 * no OOP architecture
-* no framework-shaped project structure
+* no framework-shaped structure
 
 This repository is not the FACTSTR core repository.
-It is not the place for store implementations, release mechanics, transport, or architectural experiments.
-Its purpose is clear usage examples.
+It is not the place for store implementations, release mechanics, transport, persistence work, or framework experiments.
+
+Its purpose is clear example applications.
+
+## Working Idea
+
+Use this repository to demonstrate how FACTSTR can be applied in TypeScript applications that stay structurally small and explicit.
+
+The examples should make these ideas visible:
+
+* events are append-only facts
+* current state is rebuilt from events
+* decisions depend on relevant query-defined context
+* `appendIf` makes conflicts explicit instead of silently overwriting changes
+* feature behavior stays local to feature slices
+* the shared surface is limited to event definitions in `src/events/`
 
 ## Current Package Boundary
 
-The examples in this repository must stay honest about the current Node package surface.
+The repository must stay honest about the current Node package surface.
 
 Assume only:
 
@@ -41,13 +56,23 @@ Do not pretend that Node already supports:
 * durable streams
 * transport behavior
 
+## Example Direction
+
+This repository should be a **multi-example repository** from the start, even if it begins with one example only.
+
+Examples should live under:
+
+* `examples/<example-name>/`
+
+Each example should be small, understandable, and realistic enough to show why FACTSTR is useful.
+
 ## First Example
 
 The first example should be:
 
 **Meeting Room Booking Board**
 
-This should be a small web application with a simple UI that shows:
+This should be a small browser application with a simple UI that shows:
 
 * a fixed set of meeting rooms
 * a single day view
@@ -57,20 +82,18 @@ This should be a small web application with a simple UI that shows:
 
 ## Why This Scenario
 
-This scenario is the right first example because it makes conditional append necessary.
+This is the right first example because it makes conditional append necessary.
 
 It should show:
 
 * facts are appended instead of mutating current state
-* current state is rebuilt from events
-* a decision depends on a query-defined context
-* a stale view can produce a visible conflict instead of silently overwriting another change
+* current slot state is rebuilt from events
+* a booking decision depends on relevant context
+* a stale view can produce a visible conflict instead of overwriting another change silently
 
-That is exactly the kind of example the current package can support well.
+This keeps the example realistic without requiring streams, persistence, or backend infrastructure.
 
 ## Architecture Rules
-
-The repository must follow these rules.
 
 ### 1. Functional Core / Imperative Shell
 
@@ -78,10 +101,10 @@ Keep pure logic separate from IO.
 
 Pure logic includes:
 
-* deciding whether a reservation is valid
-* deciding whether a cancellation is valid
-* building event payloads
-* projecting current board state from events
+* decisions
+* projections
+* event construction
+* response shaping
 
 Shell code includes:
 
@@ -96,19 +119,34 @@ Do not hide IO inside pure functions.
 
 Each feature owns its own local flow.
 
-The main feature slices in the first example should be:
+A feature slice may contain:
 
-* `reserve-slot`
-* `cancel-slot`
-* `booking-board`
+* request and response types
+* shell files such as `load_*` and `append_*`
+* pure files such as `decide_*`, `project_*`, and `build_*`
+* one local flow file named after the feature
 
-Each feature slice should contain its own request/response types where they add clarity, its own shell files, its own pure logic, and its own local flow file.
+Use direct names such as:
+
+* `reserve_slot.ts`
+* `cancel_slot.ts`
+* `get_booking_board.ts`
+
+Do not use vague names such as:
+
+* `action.ts`
+* `service.ts`
+* `manager.ts`
+* `repository.ts`
+* `controller.ts`
 
 ### 3. Shared Event Contract
 
-The repository should have a central `src/events/` folder.
+The repository may contain a central:
 
-This folder is the only shared event contract surface.
+* `src/events/`
+
+This is the only shared contract surface.
 
 It may contain only:
 
@@ -122,23 +160,26 @@ It must not contain:
 * decision logic
 * append logic
 * query logic
-* projection logic
+* projections
 * feature flows
-* shell code
 * UI code
+* shell code
+
+### 4. Dependency Direction
 
 Dependency direction should be:
 
 * features → events
-* query slices → events
 * UI → features
-* no feature → feature imports
+* `main.ts` → features and UI
 
-### 4. No OOP Architecture
+Features must not import other features.
 
-Do not structure the example around:
+### 5. No OOP Architecture
 
-* classes as the primary design
+Do not structure examples around:
+
+* classes as the primary architecture
 * entities
 * services
 * managers
@@ -146,7 +187,7 @@ Do not structure the example around:
 * controllers
 * domain layers
 
-Do not introduce generic technical folders such as:
+Do not introduce generic technical buckets such as:
 
 * `services`
 * `domain`
@@ -157,158 +198,96 @@ Do not introduce generic technical folders such as:
 * `common`
 * `utils`
 
-### 5. No Framework-Shaped Structure
+### 6. No Framework-Shaped Structure
 
-Do not build the repo around a UI framework.
-
-No React-style architecture.
-No hook-driven architecture.
-No component tree as the main ownership model.
+Use plain TypeScript, plain HTML, and plain CSS unless a task explicitly changes that.
 
 A build tool is acceptable.
 A framework-shaped application is not.
 
-The example should stay close to plain TypeScript, plain HTML, and plain CSS.
+Do not let the UI become the ownership model.
 
-## Repository Structure
+### 7. Keep `main.ts` Small
 
-The repository should be prepared from the start as a multi-example repository, even if it begins with one example only.
+`src/main.ts` is composition only.
 
-Use this direction:
-
-```text
-factstr-examples-typescript/
-  README.md
-  PROJECT_BRIEF.md
-  examples/
-    meeting-room-booking/
-      README.md
-      package.json
-      tsconfig.json
-      index.html
-      src/
-        main.ts
-
-        events/
-          slot_reserved.ts
-          slot_cancelled.ts
-
-        features/
-          reserve-slot/
-            request.ts
-            response.ts
-
-            load_slot_context.ts
-            decide_reservation.ts
-            build_slot_reserved.ts
-            append_slot_reserved.ts
-
-            reserve_slot.ts
-
-          cancel-slot/
-            request.ts
-            response.ts
-
-            load_slot_context.ts
-            decide_cancellation.ts
-            build_slot_cancelled.ts
-            append_slot_cancelled.ts
-
-            cancel_slot.ts
-
-          booking-board/
-            request.ts
-            response.ts
-
-            load_board_facts.ts
-            project_board.ts
-
-            get_booking_board.ts
-
-        ui/
-          render_board.ts
-          bind_board_events.ts
-          render_flash_message.ts
-```
-
-Future examples should be added as siblings under `examples/`.
-
-## Meaning Of The Structure
-
-### `src/events/`
-
-Shared event contract only.
-
-Example files:
-
-* `slot_reserved.ts`
-* `slot_cancelled.ts`
-
-These files should define the shared event type string and payload shape.
-
-### `src/features/reserve-slot/`
-
-Owns:
-
-* loading the relevant slot context
-* deciding whether reservation is allowed
-* building the reservation event
-* appending the reservation event
-* the local flow in `reserve_slot.ts`
-
-### `src/features/cancel-slot/`
-
-Same shape for cancellation.
-
-### `src/features/booking-board/`
-
-Owns:
-
-* loading relevant events for the board
-* projecting board state
-* returning the current board response/view model
-
-### `src/ui/`
-
-Only UI rendering and DOM event binding.
-
-No feature logic should live here.
-
-### `src/main.ts`
-
-Only startup and composition.
-
-It should:
+It may:
 
 * create the FACTSTR store
-* call feature flows
-* trigger rendering
-* wire UI interactions to features
-* rerender after interactions
+* wire feature flows to UI events
+* trigger rerendering
 
 It must not become an application layer.
 
-## Naming Rules
+## Expected Example Structure
 
-Use direct names that describe ownership and behavior.
+A typical example should look like this:
 
-Prefer:
+```text
+examples/<example-name>/
+  README.md
+  package.json
+  tsconfig.json
+  index.html
+  src/
+    main.ts
+    events/
+    features/
+    ui/
+```
 
-* `load_slot_context.ts`
-* `decide_reservation.ts`
-* `build_slot_reserved.ts`
-* `append_slot_reserved.ts`
-* `reserve_slot.ts`
-* `project_board.ts`
-* `get_booking_board.ts`
+The first example should follow this direction:
 
-Do not use vague names such as:
+```text
+examples/meeting-room-booking/
+  README.md
+  package.json
+  tsconfig.json
+  index.html
+  src/
+    main.ts
 
-* `action.ts`
-* `service.ts`
-* `manager.ts`
-* `repository.ts`
-* `controller.ts`
+    events/
+      slot_reserved.ts
+      slot_cancelled.ts
+
+    features/
+      reserve-slot/
+        request.ts
+        response.ts
+
+        load_slot_context.ts
+        decide_reservation.ts
+        build_slot_reserved.ts
+        append_slot_reserved.ts
+
+        reserve_slot.ts
+
+      cancel-slot/
+        request.ts
+        response.ts
+
+        load_slot_context.ts
+        decide_cancellation.ts
+        build_slot_cancelled.ts
+        append_slot_cancelled.ts
+
+        cancel_slot.ts
+
+      booking-board/
+        request.ts
+        response.ts
+
+        load_board_facts.ts
+        project_board.ts
+
+        get_booking_board.ts
+
+    ui/
+      render_board.ts
+      bind_board_events.ts
+      render_flash_message.ts
+```
 
 ## Event Model For The First Example
 
@@ -324,41 +303,29 @@ Payload fields can include:
 * `slot`
 * `user_name`
 
-The relevant context for a reserve or cancel decision is defined by query over:
+The relevant context for reserve or cancel decisions is defined by query over:
 
 * one room
 * one date
 * one slot
 
-## Functional Shape Of The Example
+## Functional Shape Of The First Example
 
 The first example should support:
 
 * viewing the booking board for one day
 * reserving a free slot
 * cancelling an existing reservation
-* rebuilding current slot/board state from events
+* rebuilding current board state from events
 * showing a visible conflict message when `appendIf` fails because the relevant context changed
 
 It does not need:
 
 * authentication
 * persistence
-* real multi-user synchronization
+* multi-user networking
 * server architecture
 * production deployment
-
-## Success Criteria
-
-This repository is successful when:
-
-* a TypeScript developer can understand the first example quickly
-* the example uses `@factstr/factstr-node` directly
-* the structure clearly shows FCIS and feature-local ownership
-* event sharing is limited to `src/events/`
-* the first example demonstrates `append`, `query`, and `appendIf` naturally
-* the UI makes conflicts visible and understandable
-* the repo structure is ready for more examples later
 
 ## Non-Goals
 
@@ -371,7 +338,21 @@ At the start, this repository should not aim to provide:
 * framework examples
 * server architecture examples
 * production architecture guidance
-* generic abstractions for future flexibility
+* speculative abstractions for future flexibility
+
+The purpose is example clarity, not feature breadth.
+
+## Success Criteria
+
+This repository is successful when:
+
+* a TypeScript developer can understand an example quickly
+* the published package is used directly
+* examples show `append`, `query`, and `appendIf` naturally
+* FCIS and feature-local ownership are visible in the file structure
+* `src/events/` stays the only shared contract surface
+* the UI makes conflicts visible and understandable
+* the repository structure is ready for more examples later
 
 ## Summary
 
