@@ -26,8 +26,12 @@ The data is memory-backed because the current Node package boundary is intention
 Vite is used only as the dev/build tool.
 The browser entry is `index.html` plus `src/main.ts`.
 `src/app/` is the composition root.
-Routing is a small hash router with `#/board` as the current route.
+Routing is a small hash router with `#/board?date=YYYY-MM-DD` as the board route.
 Logging is a small browser-console wrapper in `src/app/log.ts`.
+The app has a small explicit current-user input.
+Reserve actions use that user directly.
+Cancellation is ownership-aware and only succeeds for the matching reserver.
+This is still not authentication and not a provider model.
 Providers do not exist yet.
 This step uses seeded in-memory events only.
 
@@ -45,6 +49,7 @@ npm run dev
 ```
 
 Then open the local Vite URL shown in the terminal.
+Use the previous/next day buttons to update the route date and reload the board.
 
 ## Build
 

@@ -11,7 +11,7 @@ const record = (event_type: string, payload: unknown, sequence_number = 1n): Int
 });
 
 describe('decideCancellation', () => {
-  it('allows cancellation when the slot is reserved', () => {
+  it('allows cancellation when the slot is reserved by the matching user', () => {
     expect(
       decideCancellation([
         record(SLOT_RESERVED, {
@@ -20,12 +20,24 @@ describe('decideCancellation', () => {
           slot: '09:00',
           user_name: 'Nadia',
         }),
-      ]),
+      ], {
+        room_id: 'Atlas',
+        date: '2026-05-01',
+        slot: '09:00',
+        user_name: 'Nadia',
+        expected_context_version: '1',
+      }),
     ).toEqual({ status: 'allow' });
   });
 
   it('rejects cancellation when the slot is free', () => {
-    expect(decideCancellation([])).toEqual({
+    expect(decideCancellation([], {
+      room_id: 'Atlas',
+      date: '2026-05-01',
+      slot: '09:00',
+      user_name: 'Alex',
+      expected_context_version: null,
+    })).toEqual({
       status: 'rejection',
       reason: 'slot-already-free',
       message: 'Slot is already free.',
@@ -49,11 +61,40 @@ describe('decideCancellation', () => {
           },
           2n,
         ),
-      ]),
+      ], {
+        room_id: 'Atlas',
+        date: '2026-05-01',
+        slot: '09:00',
+        user_name: 'Alex',
+        expected_context_version: '2',
+      }),
     ).toEqual({
       status: 'rejection',
       reason: 'slot-already-free',
       message: 'Slot is already free.',
+    });
+  });
+
+  it('rejects cancellation when another user owns the reservation', () => {
+    expect(
+      decideCancellation([
+        record(SLOT_RESERVED, {
+          room_id: 'Atlas',
+          date: '2026-05-01',
+          slot: '09:00',
+          user_name: 'Nadia',
+        }),
+      ], {
+        room_id: 'Atlas',
+        date: '2026-05-01',
+        slot: '09:00',
+        user_name: 'Alex',
+        expected_context_version: '1',
+      }),
+    ).toEqual({
+      status: 'rejection',
+      reason: 'slot-owned-by-another-user',
+      message: 'Slot is reserved by Nadia. Only the matching reserver can cancel it.',
     });
   });
 });

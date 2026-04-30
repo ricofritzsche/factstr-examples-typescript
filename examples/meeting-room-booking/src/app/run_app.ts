@@ -2,9 +2,16 @@ import type { CancelSlotRequest } from '../features/cancel-slot/request';
 import type { CancelSlotResponse } from '../features/cancel-slot/response';
 import type { ReserveSlotRequest } from '../features/reserve-slot/request';
 import type { ReserveSlotResponse } from '../features/reserve-slot/response';
+import { buildReserveFlashMessage } from './build_reserve_flash_message';
 import { log } from './log';
-import { refreshBoard, type FlashState, type SlotAction } from './refresh_board';
-import { startRouter, type AppRoute } from './router';
+import {
+  loadBoard,
+  refreshBoard,
+  renderBoardScreen,
+  type FlashState,
+  type SlotAction,
+} from './refresh_board';
+import { navigateToBoardDate, shiftRouteDate, startRouter, type AppRoute } from './router';
 
 const boardUrl = '/__meeting-room-booking/board';
 const cancelUrl = '/__meeting-room-booking/cancel';
@@ -29,7 +36,7 @@ export const runApp = () => {
     message: 'Reserve or cancel a slot to append a new fact and rerender the board.',
     tone: 'neutral',
   };
-  let userName = 'Alex';
+  let currentUser = 'Alex';
 
   const reserveSlot = async (request: ReserveSlotRequest) => {
     const response = await fetch(reserveUrl, {
@@ -59,8 +66,10 @@ export const runApp = () => {
     command: 'reserve-slot' | 'cancel-slot',
     result: ReserveSlotResponse | CancelSlotResponse,
     slotAction: SlotAction,
+    actingUser: string,
   ) => {
     const details = {
+      acting_user: actingUser,
       room_id: slotAction.roomId,
       date: slotAction.date,
       slot: slotAction.slot,
@@ -81,7 +90,27 @@ export const runApp = () => {
     log.warn(`${command}-rejection`, details);
   };
 
-  const refreshCurrentRoute = async () => {
+  const navigatePreviousDay = () => {
+    if (!currentRoute) {
+      return;
+    }
+
+    const previousDate = shiftRouteDate(currentRoute.date, -1);
+    log.info('route-date-previous-day', { from: currentRoute.date, to: previousDate });
+    navigateToBoardDate(previousDate);
+  };
+
+  const navigateNextDay = () => {
+    if (!currentRoute) {
+      return;
+    }
+
+    const nextDate = shiftRouteDate(currentRoute.date, 1);
+    log.info('route-date-next-day', { from: currentRoute.date, to: nextDate });
+    navigateToBoardDate(nextDate);
+  };
+
+  const renderCurrentBoard = async () => {
     if (!currentRoute) {
       return;
     }
@@ -91,60 +120,115 @@ export const runApp = () => {
       boardUrl,
       flashState,
       route: currentRoute,
-      userName,
+      currentUser,
       onUserNameChange: (value) => {
-        userName = value;
+        currentUser = value;
       },
-      onSlotAction: async (slotAction) => {
-        const trimmedUserName = userName.trim();
-
-        if (!trimmedUserName) {
-          flashState = createWarningFlash('Enter a user name before changing a slot.');
-          log.warn('slot-action-missing-user-name', {
-            room_id: slotAction.roomId,
-            date: slotAction.date,
-            slot: slotAction.slot,
-          });
-          await refreshCurrentRoute();
-          return;
-        }
-
-        const result =
-          slotAction.status === 'reserved'
-            ? await cancelSlot({
-                room_id: slotAction.roomId,
-                date: slotAction.date,
-                slot: slotAction.slot,
-                user_name: trimmedUserName,
-                expected_context_version: slotAction.contextVersion,
-              })
-            : await reserveSlot({
-                room_id: slotAction.roomId,
-                date: slotAction.date,
-                slot: slotAction.slot,
-                user_name: trimmedUserName,
-                expected_context_version: slotAction.contextVersion,
-              });
-
-        logCommandOutcome(
-          slotAction.status === 'reserved' ? 'cancel-slot' : 'reserve-slot',
-          result,
-          slotAction,
-        );
-
-        flashState =
-          result.status === 'success'
-            ? { message: result.message, tone: 'success' }
-            : createWarningFlash(result.message);
-
-        await refreshCurrentRoute();
-      },
+      onNavigatePreviousDay: navigatePreviousDay,
+      onNavigateNextDay: navigateNextDay,
+      onSlotAction: handleSlotAction,
     });
   };
 
-  startRouter(async (route) => {
-    currentRoute = route;
-    log.info('route-changed', { route: route.hash });
-    await refreshCurrentRoute();
+  const handleSlotAction = async (slotAction: SlotAction) => {
+    const trimmedUserName = currentUser.trim();
+
+    if (!trimmedUserName) {
+      flashState = createWarningFlash('Enter a user name before changing a slot.');
+      log.warn('slot-action-missing-user-name', {
+        acting_user: currentUser,
+        room_id: slotAction.roomId,
+        date: slotAction.date,
+        slot: slotAction.slot,
+      });
+      await renderCurrentBoard();
+      return;
+    }
+
+    if (slotAction.status === 'free') {
+      const result = await reserveSlot({
+        room_id: slotAction.roomId,
+        date: slotAction.date,
+        slot: slotAction.slot,
+        user_name: trimmedUserName,
+        expected_context_version: slotAction.contextVersion,
+      });
+
+      logCommandOutcome('reserve-slot', result, slotAction, trimmedUserName);
+
+      if (!currentRoute) {
+        return;
+      }
+
+      const refreshedBoard = await loadBoard(boardUrl, currentRoute);
+      const message = buildReserveFlashMessage({
+        result,
+        board: refreshedBoard,
+        roomId: slotAction.roomId,
+        slot: slotAction.slot,
+      });
+
+      flashState = result.status === 'success' ? { message, tone: 'success' } : createWarningFlash(message);
+      renderBoardScreen({
+        app,
+        board: refreshedBoard,
+        flashState,
+        route: currentRoute,
+        currentUser,
+        onUserNameChange: (value) => {
+          currentUser = value;
+        },
+        onNavigatePreviousDay: navigatePreviousDay,
+        onNavigateNextDay: navigateNextDay,
+        onSlotAction: handleSlotAction,
+      });
+      return;
+    }
+
+    const result = await cancelSlot({
+      room_id: slotAction.roomId,
+      date: slotAction.date,
+      slot: slotAction.slot,
+      user_name: trimmedUserName,
+      expected_context_version: slotAction.contextVersion,
+    });
+
+    logCommandOutcome('cancel-slot', result, slotAction, trimmedUserName);
+
+    if (!currentRoute) {
+      return;
+    }
+
+    const refreshedBoard = await loadBoard(boardUrl, currentRoute);
+
+    flashState =
+      result.status === 'success'
+        ? { message: result.message, tone: 'success' }
+        : createWarningFlash(result.message);
+
+    renderBoardScreen({
+      app,
+      board: refreshedBoard,
+      flashState,
+      route: currentRoute,
+      currentUser,
+      onUserNameChange: (value) => {
+        currentUser = value;
+      },
+      onNavigatePreviousDay: navigatePreviousDay,
+      onNavigateNextDay: navigateNextDay,
+      onSlotAction: handleSlotAction,
+    });
+  };
+
+  startRouter({
+    onRouteNormalized: ({ from, to }) => {
+      log.warn('route-normalized', { from, to });
+    },
+    onRouteChange: async (route) => {
+      currentRoute = route;
+      log.info('route-changed', { route: route.hash, date: route.date });
+      await renderCurrentBoard();
+    },
   });
 };

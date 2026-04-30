@@ -10,7 +10,7 @@ export type CancelSlotConflict = {
 
 export type CancelSlotRejection = {
   status: 'rejection';
-  reason: 'slot-already-free';
+  reason: 'slot-already-free' | 'slot-owned-by-another-user';
   message: string;
 };
 

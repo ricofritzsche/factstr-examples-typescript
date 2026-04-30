@@ -19,7 +19,7 @@ export const cancelSlot = (
   request: CancelSlotRequest,
 ): CancelSlotResponse => {
   const slotContext = loadSlotContext(store, request);
-  const decision = decideCancellation(slotContext.result.event_records);
+  const decision = decideCancellation(slotContext.result.event_records, request);
 
   if (decision.status !== 'allow') {
     return decision;

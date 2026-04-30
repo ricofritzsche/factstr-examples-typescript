@@ -13,6 +13,7 @@
     "@factstr/factstr-node": "0.1.3"
   },
   "devDependencies": {
+    "@types/node": "^24.10.1",
     "typescript": "^5.9.3",
     "vite": "^7.1.10",
     "vitest": "^3.2.4"

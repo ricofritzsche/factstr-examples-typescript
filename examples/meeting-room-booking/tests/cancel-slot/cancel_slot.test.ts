@@ -71,6 +71,42 @@ describe('cancelSlot', () => {
     expect(after).toBe(before);
   });
 
+  it('returns explicit rejection before append when another user owns the slot', () => {
+    const store = new FactstrMemoryStore();
+    store.append([
+      {
+        event_type: SLOT_RESERVED,
+        payload: {
+          room_id: 'Atlas',
+          date: '2026-05-01',
+          slot: '09:00',
+          user_name: 'Nadia',
+        },
+      },
+    ]);
+
+    const before = store.query({ filters: [{ event_types: [SLOT_RESERVED, SLOT_CANCELLED] }] })
+      .event_records.length;
+
+    const result = cancelSlot(store, {
+      room_id: 'Atlas',
+      date: '2026-05-01',
+      slot: '09:00',
+      user_name: 'Alex',
+      expected_context_version: '1',
+    });
+
+    const after = store.query({ filters: [{ event_types: [SLOT_RESERVED, SLOT_CANCELLED] }] })
+      .event_records.length;
+
+    expect(result).toEqual({
+      status: 'rejection',
+      reason: 'slot-owned-by-another-user',
+      message: 'Slot is reserved by Nadia. Only the matching reserver can cancel it.',
+    });
+    expect(after).toBe(before);
+  });
+
   it('returns explicit conflict when expected context version is stale', () => {
     const store = new FactstrMemoryStore();
     store.append([

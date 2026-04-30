@@ -22,23 +22,29 @@ type RefreshBoardParams = {
   boardUrl: string;
   flashState: FlashState;
   route: AppRoute;
-  userName: string;
+  currentUser: string;
   onSlotAction: (slotAction: SlotAction) => Promise<void>;
   onUserNameChange: (value: string) => void;
+  onNavigatePreviousDay: () => void;
+  onNavigateNextDay: () => void;
 };
 
-export const refreshBoard = async ({
-  app,
-  boardUrl,
-  flashState,
-  route,
-  userName,
-  onSlotAction,
-  onUserNameChange,
-}: RefreshBoardParams) => {
-  log.info('board-load-started', { route: route.hash });
+type RenderBoardScreenParams = {
+  app: HTMLDivElement;
+  board: BookingBoardResponse;
+  flashState: FlashState;
+  route: AppRoute;
+  currentUser: string;
+  onSlotAction: (slotAction: SlotAction) => Promise<void>;
+  onUserNameChange: (value: string) => void;
+  onNavigatePreviousDay: () => void;
+  onNavigateNextDay: () => void;
+};
 
-  const response = await fetch(boardUrl);
+export const loadBoard = async (boardUrl: string, route: AppRoute) => {
+  log.info('board-load-started', { route: route.hash, date: route.date });
+
+  const response = await fetch(`${boardUrl}?date=${route.date}`);
   const board = (await response.json()) as BookingBoardResponse;
 
   log.info('board-load-finished', {
@@ -47,22 +53,62 @@ export const refreshBoard = async ({
     room_count: board.rooms.length,
   });
 
+  return board;
+};
+
+export const renderBoardScreen = ({
+  app,
+  board,
+  flashState,
+  route,
+  currentUser,
+  onSlotAction,
+  onUserNameChange,
+  onNavigatePreviousDay,
+  onNavigateNextDay,
+}: RenderBoardScreenParams) => {
   app.innerHTML = `
     <section style="max-width: 1100px; margin: 0 auto; padding: 24px 20px 0;">
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div>
+          <div style="margin-bottom: 6px; color: #6b7280; font: 600 0.82rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif; letter-spacing: 0.08em; text-transform: uppercase;">
+            Route Date
+          </div>
+          <div style="color: #111827; font: 700 1.15rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif;">
+            ${route.date}
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button
+            id="previous-day"
+            type="button"
+            style="padding: 10px 14px; border: 1px solid rgba(31, 41, 51, 0.12); border-radius: 999px; background: rgba(255, 255, 255, 0.86); color: #1f2933; font: 600 0.92rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif; cursor: pointer;"
+          >
+            Previous Day
+          </button>
+          <button
+            id="next-day"
+            type="button"
+            style="padding: 10px 14px; border: 1px solid rgba(31, 41, 51, 0.12); border-radius: 999px; background: rgba(255, 255, 255, 0.86); color: #1f2933; font: 600 0.92rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif; cursor: pointer;"
+          >
+            Next Day
+          </button>
+        </div>
+      </div>
       <label for="user-name" style="display: block; margin-bottom: 8px; color: #334155; font: 600 0.95rem/1.4 'IBM Plex Sans', 'Segoe UI', sans-serif;">
-        Reserve as
+        User
       </label>
       <input
         id="user-name"
         name="user-name"
         type="text"
         placeholder="Your name"
-        value="${userName}"
+        value="${currentUser}"
         style="width: min(320px, 100%); padding: 12px 14px; border: 1px solid rgba(31, 41, 51, 0.16); border-radius: 12px; background: rgba(255, 255, 255, 0.86); font: 500 1rem/1.4 'IBM Plex Sans', 'Segoe UI', sans-serif;"
       />
+      ${renderFlashMessage(flashState.message, flashState.tone)}
     </section>
     ${renderBoard(board)}
-    ${renderFlashMessage(flashState.message, flashState.tone)}
   `;
 
   const input = document.querySelector<HTMLInputElement>('#user-name');
@@ -71,6 +117,12 @@ export const refreshBoard = async ({
       onUserNameChange(input.value);
     });
   }
+
+  const previousDayButton = document.querySelector<HTMLButtonElement>('#previous-day');
+  previousDayButton?.addEventListener('click', onNavigatePreviousDay);
+
+  const nextDayButton = document.querySelector<HTMLButtonElement>('#next-day');
+  nextDayButton?.addEventListener('click', onNavigateNextDay);
 
   document.querySelectorAll<HTMLButtonElement>('.slot-action-button').forEach((button) => {
     button.addEventListener('click', async () => {
@@ -85,4 +137,30 @@ export const refreshBoard = async ({
   });
 
   return board;
+};
+
+export const refreshBoard = async ({
+  app,
+  boardUrl,
+  flashState,
+  route,
+  currentUser,
+  onSlotAction,
+  onUserNameChange,
+  onNavigatePreviousDay,
+  onNavigateNextDay,
+}: RefreshBoardParams) => {
+  const board = await loadBoard(boardUrl, route);
+
+  return renderBoardScreen({
+    app,
+    board,
+    flashState,
+    route,
+    currentUser,
+    onSlotAction,
+    onUserNameChange,
+    onNavigatePreviousDay,
+    onNavigateNextDay,
+  });
 };
