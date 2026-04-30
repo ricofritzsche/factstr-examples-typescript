@@ -3,12 +3,6 @@ name: event-contract
 description: Add or change shared event definitions in src/events while keeping the folder purely declarative and independent from feature logic.
 ---
 
----
-
-name: event-contract
-description: Add or change shared event definitions in src/events while keeping the folder purely declarative and independent from feature logic.
--------------------------------------------------------------------------------------------------------------------------------------------------
-
 # Purpose
 
 Use this skill when creating or changing files in `src/events/`.

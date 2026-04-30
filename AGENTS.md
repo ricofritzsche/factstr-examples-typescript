@@ -4,150 +4,55 @@
 
 This repository contains small, realistic TypeScript examples for FACTSTR.
 
-The goal is to show how to build applications with:
+It exists to show direct usage of `@factstr/factstr-node` with:
 
-- plain TypeScript
-- explicit events
-- query-defined consistency
 - functional core / imperative shell
 - self-contained feature slices
+- explicit event shapes
+- query-defined consistency
+- plain TypeScript, HTML, and CSS
 
-This repository is not the FACTSTR core repository.
-It is not the place for store implementations, transport, framework experiments, or generic architecture patterns.
+It is not the FACTSTR core repository and not the place for store implementations, transport, release mechanics, framework experiments, or generic architecture layers.
 
 ## Non-Negotiable Rules
 
-### 1. Keep the structure feature-first
-
-Code belongs primarily under:
-
-- `src/events/`
-- `src/features/`
-- `src/ui/`
-- `src/main.ts`
-
-Do not structure the application around generic technical buckets.
-
-Do not introduce folders such as:
-
-- `services`
-- `domain`
-- `repositories`
-- `controllers`
-- `managers`
-- `shared`
-- `common`
-- `utils`
-
-### 2. `src/events/` is the only shared contract surface
-
-`src/events/` may contain only:
-
-- event type names
-- payload types
-- event types/interfaces
-- small structural event declarations if needed
-
-It must not contain:
-
-- decision logic
-- append logic
-- query logic
-- projection logic
-- feature flows
-- UI code
-- shell code
-
-### 3. No feature-to-feature imports
-
-Features may import from:
-
-- `src/events/`
-
-Features must not import from other features.
-
-Dependency direction should be:
-
-- features → events
-- UI → features
-- `main.ts` → features and UI
-
-### 4. Functional core / imperative shell
-
-Pure logic and IO must stay separate.
-
-Pure logic includes:
-
-- decisions
-- projections
-- event construction
-- data shaping
-
-Shell code includes:
-
-- reading from the FACTSTR store
-- appending events
-- DOM wiring
-- screen updates
-
-Do not hide IO inside pure logic files.
-
-### 5. Use direct names
-
-Use names that describe what the file owns.
-
-Prefer names like:
-
-- `load_slot_context.ts`
-- `decide_reservation.ts`
-- `build_slot_reserved.ts`
-- `append_slot_reserved.ts`
-- `reserve_slot.ts`
-- `project_board.ts`
-- `get_booking_board.ts`
-
-Avoid vague names like:
-
-- `action.ts`
-- `service.ts`
-- `manager.ts`
-- `repository.ts`
-- `controller.ts`
-- `helper.ts`
-
-### 6. No framework-shaped architecture
-
-Use plain TypeScript, plain HTML, and plain CSS unless a task explicitly changes that.
-
-A build tool is acceptable.
-A framework-shaped structure is not.
-
-Do not let the UI become the ownership model.
-
-### 7. Keep `main.ts` small
-
-`src/main.ts` is composition only.
-
-It may:
-
-- create the store
-- wire feature flows to UI events
-- trigger rerendering
-
-It must not become an application layer.
+- Follow FCIS: keep pure decision, projection, and event-building logic separate from store, DOM, and wiring code.
+- Use self-contained feature slices under `src/features/`.
+- Treat `src/events/` as the shared event contract only.
+- Do not allow feature-to-feature imports.
+- Do not introduce OOP or framework-shaped structure.
+- Do not add generic folders such as `services`, `domain`, `repositories`, `controllers`, `managers`, `shared`, `common`, or `utils`.
+- Keep `src/main.ts` composition-only.
 
 ## Expected Repository Shape
 
-A typical example should look like this:
-
 ```text
-examples/<example-name>/
+factstr-examples-typescript/
   README.md
-  package.json
-  tsconfig.json
-  index.html
-  src/
-    main.ts
-    events/
-    features/
-    ui/
+  PROJECT_BRIEF.md
+  examples/
+    <example-name>/
+      README.md
+      package.json
+      tsconfig.json
+      index.html
+      src/
+        main.ts
+        events/
+        features/
+        ui/
+```
+
+Inside an example:
+
+- `src/events/` contains only shared event names, payloads, and event types.
+- `src/features/` contains self-contained command and query slices.
+- `src/ui/` contains rendering and DOM binding only.
+
+## Skills
+
+Use these repo-local skills when relevant:
+
+- `feature-slice-typescript` at `.agents/skills/feature-slice-typescript/SKILL.md`
+- `event-contract` at `.agents/skills/event-contract/SKILL.md`
+- `example-bootstrap` at `.agents/skills/example-bootstrap/SKILL.md`

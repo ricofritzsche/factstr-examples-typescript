@@ -3,12 +3,6 @@ name: feature-slice-typescript
 description: Build or change a TypeScript feature slice using FCIS, self-contained feature ownership, and the shared event contract in src/events.
 ---
 
----
-
-name: feature-slice-typescript
-description: Build or change a TypeScript feature slice using FCIS, self-contained feature ownership, and the shared event contract in src/events.
---------------------------------------------------------------------------------------------------------------------------------------------------
-
 # Purpose
 
 Use this skill when creating or changing a feature slice in this repository.
