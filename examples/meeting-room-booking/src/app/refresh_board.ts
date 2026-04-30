@@ -1,4 +1,5 @@
 import type { BookingBoardResponse } from '../features/booking-board/response';
+import type { GetMyReservationsResponse } from '../features/get-my-reservations/response';
 import { renderBoard } from '../ui/render_board';
 import { renderFlashMessage } from '../ui/render_flash_message';
 import type { AppRoute } from './router';
@@ -20,11 +21,13 @@ export type SlotAction = {
 type RefreshBoardParams = {
   app: HTMLDivElement;
   boardUrl: string;
+  myReservationsUrl: string;
   flashState: FlashState;
   route: AppRoute;
   currentUser: string;
   onSlotAction: (slotAction: SlotAction) => Promise<void>;
   onUserNameChange: (value: string) => void;
+  onUserNameCommit: () => Promise<void>;
   onNavigatePreviousDay: () => void;
   onNavigateNextDay: () => void;
 };
@@ -32,11 +35,13 @@ type RefreshBoardParams = {
 type RenderBoardScreenParams = {
   app: HTMLDivElement;
   board: BookingBoardResponse;
+  myReservations: GetMyReservationsResponse;
   flashState: FlashState;
   route: AppRoute;
   currentUser: string;
   onSlotAction: (slotAction: SlotAction) => Promise<void>;
   onUserNameChange: (value: string) => void;
+  onUserNameCommit: () => Promise<void>;
   onNavigatePreviousDay: () => void;
   onNavigateNextDay: () => void;
 };
@@ -56,14 +61,42 @@ export const loadBoard = async (boardUrl: string, route: AppRoute) => {
   return board;
 };
 
+export const loadMyReservations = async (
+  myReservationsUrl: string,
+  route: AppRoute,
+  currentUser: string,
+) => {
+  log.info('my-reservations-load-started', {
+    route: route.hash,
+    date: route.date,
+    user_name: currentUser,
+  });
+
+  const response = await fetch(
+    `${myReservationsUrl}?date=${route.date}&user_name=${encodeURIComponent(currentUser)}`,
+  );
+  const myReservations = (await response.json()) as GetMyReservationsResponse;
+
+  log.info('my-reservations-load-finished', {
+    route: route.hash,
+    date: myReservations.date,
+    user_name: myReservations.user_name,
+    reservation_count: myReservations.reservations.length,
+  });
+
+  return myReservations;
+};
+
 export const renderBoardScreen = ({
   app,
   board,
+  myReservations,
   flashState,
   route,
   currentUser,
   onSlotAction,
   onUserNameChange,
+  onUserNameCommit,
   onNavigatePreviousDay,
   onNavigateNextDay,
 }: RenderBoardScreenParams) => {
@@ -108,13 +141,16 @@ export const renderBoardScreen = ({
       />
       ${renderFlashMessage(flashState.message, flashState.tone)}
     </section>
-    ${renderBoard(board)}
+    ${renderBoard(board, myReservations)}
   `;
 
   const input = document.querySelector<HTMLInputElement>('#user-name');
   if (input) {
     input.addEventListener('input', () => {
       onUserNameChange(input.value);
+    });
+    input.addEventListener('change', async () => {
+      await onUserNameCommit();
     });
   }
 
@@ -142,24 +178,29 @@ export const renderBoardScreen = ({
 export const refreshBoard = async ({
   app,
   boardUrl,
+  myReservationsUrl,
   flashState,
   route,
   currentUser,
   onSlotAction,
   onUserNameChange,
+  onUserNameCommit,
   onNavigatePreviousDay,
   onNavigateNextDay,
 }: RefreshBoardParams) => {
   const board = await loadBoard(boardUrl, route);
+  const myReservations = await loadMyReservations(myReservationsUrl, route, currentUser);
 
   return renderBoardScreen({
     app,
     board,
+    myReservations,
     flashState,
     route,
     currentUser,
     onSlotAction,
     onUserNameChange,
+    onUserNameCommit,
     onNavigatePreviousDay,
     onNavigateNextDay,
   });

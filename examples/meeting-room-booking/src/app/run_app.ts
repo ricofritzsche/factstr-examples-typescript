@@ -6,6 +6,7 @@ import { buildReserveFlashMessage } from './build_reserve_flash_message';
 import { log } from './log';
 import {
   loadBoard,
+  loadMyReservations,
   refreshBoard,
   renderBoardScreen,
   type FlashState,
@@ -15,6 +16,7 @@ import { navigateToBoardDate, shiftRouteDate, startRouter, type AppRoute } from 
 
 const boardUrl = '/__meeting-room-booking/board';
 const cancelUrl = '/__meeting-room-booking/cancel';
+const myReservationsUrl = '/__meeting-room-booking/my-reservations';
 const reserveUrl = '/__meeting-room-booking/reserve';
 
 const createWarningFlash = (message: string): FlashState => ({
@@ -118,12 +120,14 @@ export const runApp = () => {
     await refreshBoard({
       app,
       boardUrl,
+      myReservationsUrl,
       flashState,
       route: currentRoute,
       currentUser,
       onUserNameChange: (value) => {
         currentUser = value;
       },
+      onUserNameCommit: renderCurrentBoard,
       onNavigatePreviousDay: navigatePreviousDay,
       onNavigateNextDay: navigateNextDay,
       onSlotAction: handleSlotAction,
@@ -161,6 +165,11 @@ export const runApp = () => {
       }
 
       const refreshedBoard = await loadBoard(boardUrl, currentRoute);
+      const refreshedMyReservations = await loadMyReservations(
+        myReservationsUrl,
+        currentRoute,
+        currentUser,
+      );
       const message = buildReserveFlashMessage({
         result,
         board: refreshedBoard,
@@ -172,12 +181,14 @@ export const runApp = () => {
       renderBoardScreen({
         app,
         board: refreshedBoard,
+        myReservations: refreshedMyReservations,
         flashState,
         route: currentRoute,
         currentUser,
         onUserNameChange: (value) => {
           currentUser = value;
         },
+        onUserNameCommit: renderCurrentBoard,
         onNavigatePreviousDay: navigatePreviousDay,
         onNavigateNextDay: navigateNextDay,
         onSlotAction: handleSlotAction,
@@ -200,6 +211,11 @@ export const runApp = () => {
     }
 
     const refreshedBoard = await loadBoard(boardUrl, currentRoute);
+    const refreshedMyReservations = await loadMyReservations(
+      myReservationsUrl,
+      currentRoute,
+      currentUser,
+    );
 
     flashState =
       result.status === 'success'
@@ -209,12 +225,14 @@ export const runApp = () => {
     renderBoardScreen({
       app,
       board: refreshedBoard,
+      myReservations: refreshedMyReservations,
       flashState,
       route: currentRoute,
       currentUser,
       onUserNameChange: (value) => {
         currentUser = value;
       },
+      onUserNameCommit: renderCurrentBoard,
       onNavigatePreviousDay: navigatePreviousDay,
       onNavigateNextDay: navigateNextDay,
       onSlotAction: handleSlotAction,

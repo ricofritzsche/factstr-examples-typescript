@@ -6,12 +6,14 @@ import { createStore } from './src/app/create_store';
 import { cancelSlot } from './src/features/cancel-slot/cancel_slot';
 import type { CancelSlotRequest } from './src/features/cancel-slot/request';
 import { getBookingBoard } from './src/features/booking-board/get_booking_board';
+import { getMyReservations } from './src/features/get-my-reservations/get_my_reservations';
 import { reserveSlot } from './src/features/reserve-slot/reserve_slot';
 import type { ReserveSlotRequest } from './src/features/reserve-slot/request';
 
 const routeBase = '/__meeting-room-booking';
 const boardPath = `${routeBase}/board`;
 const cancelPath = `${routeBase}/cancel`;
+const myReservationsPath = `${routeBase}/my-reservations`;
 const reservePath = `${routeBase}/reserve`;
 const store = createStore();
 
@@ -51,6 +53,13 @@ const getBoard = (date: string) => {
   });
 };
 
+const getMyReservationsForUser = (date: string, userName: string) => {
+  return getMyReservations(store, {
+    date,
+    user_name: userName,
+  });
+};
+
 const readJsonBody = async (request: IncomingMessage) => {
   const chunks: Buffer[] = [];
 
@@ -85,6 +94,32 @@ const handleRuntimeRequest = async (
     runtimeLog.info('board-requested', { route: boardPath, date: normalizedDate });
     response.setHeader('content-type', 'application/json; charset=utf-8');
     response.end(JSON.stringify(getBoard(normalizedDate)));
+    return true;
+  }
+
+  if (method === 'GET' && pathname === myReservationsPath) {
+    const requestedDate = requestUrl.searchParams.get('date');
+    const normalizedDate = normalizeBoardDate(requestedDate);
+    const userName = requestUrl.searchParams.get('user_name') ?? '';
+
+    if (requestedDate !== normalizedDate) {
+      runtimeLog.warn('my-reservations-date-normalized', {
+        requested_date: requestedDate,
+        normalized_date: normalizedDate,
+        user_name: userName,
+      });
+    }
+
+    const result = getMyReservationsForUser(normalizedDate, userName);
+
+    runtimeLog.info('my-reservations-requested', {
+      route: myReservationsPath,
+      date: normalizedDate,
+      user_name: userName,
+      reservation_count: result.reservations.length,
+    });
+    response.setHeader('content-type', 'application/json; charset=utf-8');
+    response.end(JSON.stringify(result));
     return true;
   }
 

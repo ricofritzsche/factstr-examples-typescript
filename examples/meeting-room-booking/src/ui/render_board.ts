@@ -1,4 +1,6 @@
 import type { BookingBoardResponse } from '../features/booking-board/response';
+import type { GetMyReservationsResponse } from '../features/get-my-reservations/response';
+import { renderMyReservations } from './render_my_reservations';
 
 const statusLabel = (status: 'free' | 'reserved') =>
   status === 'reserved' ? 'Reserved' : 'Free';
@@ -6,7 +8,10 @@ const statusLabel = (status: 'free' | 'reserved') =>
 const slotClassName = (status: 'free' | 'reserved') =>
   status === 'reserved' ? 'slot slot-reserved' : 'slot slot-free';
 
-export const renderBoard = (board: BookingBoardResponse): string => {
+export const renderBoard = (
+  board: BookingBoardResponse,
+  myReservations: GetMyReservationsResponse,
+): string => {
   const roomSections = board.rooms
     .map(
       (room) => `
@@ -101,6 +106,74 @@ export const renderBoard = (board: BookingBoardResponse): string => {
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       }
 
+      .content-grid {
+        display: grid;
+        gap: 20px;
+        align-items: start;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+      }
+
+      .my-reservations-card {
+        border: 1px solid rgba(31, 41, 51, 0.08);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: 0 20px 40px rgba(31, 41, 51, 0.08);
+        padding: 20px;
+      }
+
+      .my-reservations-header h2 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      .my-reservations-eyebrow {
+        margin: 0 0 8px;
+        color: #6b7280;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .my-reservations-date {
+        margin: 8px 0 0;
+        color: #52606d;
+        font-size: 0.92rem;
+      }
+
+      .my-reservations-list {
+        margin: 18px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .my-reservations-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 1px solid rgba(31, 41, 51, 0.08);
+      }
+
+      .my-reservations-item:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .my-reservations-room {
+        font-weight: 600;
+      }
+
+      .my-reservations-slot {
+        color: #52606d;
+      }
+
+      .my-reservations-empty {
+        margin: 18px 0 0;
+        color: #52606d;
+        line-height: 1.5;
+      }
+
       .room-card {
         border: 1px solid rgba(31, 41, 51, 0.08);
         border-radius: 20px;
@@ -191,6 +264,10 @@ export const renderBoard = (board: BookingBoardResponse): string => {
         .page {
           padding: 24px 16px 36px;
         }
+
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
 
@@ -204,8 +281,11 @@ export const renderBoard = (board: BookingBoardResponse): string => {
           </p>
         </header>
 
-        <section class="board-grid">
-          ${roomSections}
+        <section class="content-grid">
+          <div class="board-grid">
+            ${roomSections}
+          </div>
+          ${renderMyReservations(myReservations)}
         </section>
       </div>
     </main>

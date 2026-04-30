@@ -7,8 +7,10 @@ It currently demonstrates:
 - direct usage of `@factstr/factstr-node`
 - a memory-backed FACTSTR store
 - a real `booking-board` query slice
+- a real `get-my-reservations` query slice
 - real `reserve-slot` and `cancel-slot` command slices
 - projection of current board state from immutable events
+- projection of a user-specific reservation view from the same event log
 - a plain browser TypeScript app with no framework structure
 - a small `src/app/` composition root for startup, routing, refresh, and logging
 
@@ -31,6 +33,7 @@ Logging is a small browser-console wrapper in `src/app/log.ts`.
 The app has a small explicit current-user input.
 Reserve actions use that user directly.
 Cancellation is ownership-aware and only succeeds for the matching reserver.
+The app also shows the acting user’s current reservations for the selected date.
 This is still not authentication and not a provider model.
 Providers do not exist yet.
 This step uses seeded in-memory events only.
