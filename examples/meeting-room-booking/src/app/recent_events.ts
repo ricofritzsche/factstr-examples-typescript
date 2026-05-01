@@ -1,5 +1,6 @@
 export type RecentEventView = {
   sequence_number: string;
+  occurred_at: string;
   event_type: string;
   room_id: string;
   date: string;

@@ -5,7 +5,7 @@ export const renderRecentEvents = (response: RecentEventsResponse): string => {
     response.events.length === 0
       ? `
           <tr>
-            <td colspan="6" class="events-empty">No events available.</td>
+            <td colspan="7" class="events-empty">No events available.</td>
           </tr>
         `
       : response.events
@@ -13,6 +13,7 @@ export const renderRecentEvents = (response: RecentEventsResponse): string => {
             (event) => `
               <tr>
                 <td>${event.sequence_number}</td>
+                <td>${event.occurred_at}</td>
                 <td>${event.event_type}</td>
                 <td>${event.room_id}</td>
                 <td>${event.date}</td>
@@ -139,6 +140,7 @@ export const renderRecentEvents = (response: RecentEventsResponse): string => {
             <thead>
               <tr>
                 <th>Seq</th>
+                <th>Occurred At</th>
                 <th>Type</th>
                 <th>Room</th>
                 <th>Date</th>

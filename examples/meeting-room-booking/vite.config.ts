@@ -93,6 +93,7 @@ const getRecentEvents = (): RecentEventsResponse => {
 
         return {
           sequence_number: event.sequence_number.toString(),
+          occurred_at: event.occurred_at,
           event_type: event.event_type,
           room_id: payload.room_id,
           date: payload.date,

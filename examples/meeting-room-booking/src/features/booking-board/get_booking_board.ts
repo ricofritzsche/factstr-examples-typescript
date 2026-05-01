@@ -2,6 +2,7 @@ import type { EventRecord, FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED, type SlotCancelledEvent } from '../../events/slot_cancelled';
 import { SLOT_RESERVED, type SlotReservedEvent } from '../../events/slot_reserved';
 import { loadBoardFacts } from './load_board_facts';
+import { loadSlotContextVersions } from './load_slot_context_versions';
 import { projectBoard } from './project_board';
 import type { GetBookingBoardRequest } from './request';
 
@@ -32,34 +33,8 @@ export const getBookingBoard = (
   request: GetBookingBoardRequest,
 ) => {
   const result = loadBoardFacts(store, request);
-  const events = result.event_records
-    .filter(isBookingBoardEventRecord)
-    .map(toBookingBoardEvent);
-  const slotContextVersions = new Map<string, bigint | null>();
-
-  for (const roomId of request.room_ids) {
-    for (const slot of request.slots) {
-      const slotContext = store.query({
-        filters: [
-          {
-            event_types: [SLOT_RESERVED, SLOT_CANCELLED],
-            payload_predicates: [
-              {
-                room_id: roomId,
-                date: request.date,
-                slot,
-              },
-            ],
-          },
-        ],
-      });
-
-      slotContextVersions.set(
-        `${roomId}::${request.date}::${slot}`,
-        slotContext.current_context_version ?? null,
-      );
-    }
-  }
+  const events = result.event_records.filter(isBookingBoardEventRecord).map(toBookingBoardEvent);
+  const slotContextVersions = loadSlotContextVersions(store, request);
 
   return projectBoard(request, events, slotContextVersions);
 };

@@ -1,18 +1,10 @@
-import type { CancelSlotRequest } from '../features/cancel-slot/request';
 import type { CancelSlotResponse } from '../features/cancel-slot/response';
-import type { ReserveSlotRequest } from '../features/reserve-slot/request';
 import type { ReserveSlotResponse } from '../features/reserve-slot/response';
 import { defaultBoardDate } from './board_defaults';
-import { buildReserveFlashMessage } from './build_reserve_flash_message';
+import { handleCancelSlotAction } from './handle_cancel_slot_action';
+import { handleReserveSlotAction } from './handle_reserve_slot_action';
 import { log } from './log';
-import {
-  loadBoard,
-  loadMyReservations,
-  refreshBoard,
-  renderBoardScreen,
-  type FlashState,
-  type SlotAction,
-} from './refresh_board';
+import { refreshBoard, type FlashState, type SlotAction } from './refresh_board';
 import { refreshEvents } from './refresh_events';
 import {
   navigateToBoardDate,
@@ -66,29 +58,11 @@ export const runApp = () => {
     tone: 'neutral',
   };
   let currentUser = pickRandomDefaultUserName();
-
-  const reserveSlot = async (request: ReserveSlotRequest) => {
-    const response = await fetch(reserveUrl, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
-
-    return (await response.json()) as ReserveSlotResponse;
+  const setCurrentUser = (value: string) => {
+    currentUser = value;
   };
-
-  const cancelSlot = async (request: CancelSlotRequest) => {
-    const response = await fetch(cancelUrl, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
-
-    return (await response.json()) as CancelSlotResponse;
+  const setFlashState = (nextFlashState: FlashState) => {
+    flashState = nextFlashState;
   };
 
   const logCommandOutcome = (
@@ -163,9 +137,7 @@ export const runApp = () => {
       flashState,
       route: currentRoute,
       currentUser,
-      onUserNameChange: (value) => {
-        currentUser = value;
-      },
+      onUserNameChange: setCurrentUser,
       onUserNameCommit: renderCurrentBoard,
       onNavigatePreviousDay: navigatePreviousDay,
       onNavigateNextDay: navigateNextDay,
@@ -190,44 +162,23 @@ export const runApp = () => {
     }
 
     if (slotAction.status === 'free') {
-      const result = await reserveSlot({
-        room_id: slotAction.roomId,
-        date: slotAction.date,
-        slot: slotAction.slot,
-        user_name: trimmedUserName,
-        expected_context_version: slotAction.contextVersion,
-      });
-
-      logCommandOutcome('reserve-slot', result, slotAction, trimmedUserName);
-
       if (!currentRoute || currentRoute.kind !== 'board') {
         return;
       }
 
-      const refreshedBoard = await loadBoard(boardUrl, currentRoute);
-      const refreshedMyReservations = await loadMyReservations(
-        myReservationsUrl,
-        currentRoute,
-        currentUser,
-      );
-      const message = buildReserveFlashMessage({
-        result,
-        board: refreshedBoard,
-        roomId: slotAction.roomId,
-        slot: slotAction.slot,
-      });
-
-      flashState = result.status === 'success' ? { message, tone: 'success' } : createWarningFlash(message);
-      renderBoardScreen({
+      await handleReserveSlotAction({
         app,
-        board: refreshedBoard,
-        myReservations: refreshedMyReservations,
-        flashState,
-        route: currentRoute,
-        currentUser,
-        onUserNameChange: (value) => {
-          currentUser = value;
-        },
+        boardUrl,
+        myReservationsUrl,
+        reserveUrl,
+        actingUser: trimmedUserName,
+        slotAction,
+        createWarningFlash,
+        logCommandOutcome,
+        getCurrentRoute: () => currentRoute,
+        getCurrentUser: () => currentUser,
+        setFlashState,
+        onUserNameChange: setCurrentUser,
         onUserNameCommit: renderCurrentBoard,
         onNavigatePreviousDay: navigatePreviousDay,
         onNavigateNextDay: navigateNextDay,
@@ -237,42 +188,23 @@ export const runApp = () => {
       return;
     }
 
-    const result = await cancelSlot({
-      room_id: slotAction.roomId,
-      date: slotAction.date,
-      slot: slotAction.slot,
-      user_name: trimmedUserName,
-      expected_context_version: slotAction.contextVersion,
-    });
-
-    logCommandOutcome('cancel-slot', result, slotAction, trimmedUserName);
-
     if (!currentRoute || currentRoute.kind !== 'board') {
       return;
     }
 
-    const refreshedBoard = await loadBoard(boardUrl, currentRoute);
-    const refreshedMyReservations = await loadMyReservations(
-      myReservationsUrl,
-      currentRoute,
-      currentUser,
-    );
-
-    flashState =
-      result.status === 'success'
-        ? { message: result.message, tone: 'success' }
-        : createWarningFlash(result.message);
-
-    renderBoardScreen({
+    await handleCancelSlotAction({
       app,
-      board: refreshedBoard,
-      myReservations: refreshedMyReservations,
-      flashState,
-      route: currentRoute,
-      currentUser,
-      onUserNameChange: (value) => {
-        currentUser = value;
-      },
+      boardUrl,
+      myReservationsUrl,
+      cancelUrl,
+      actingUser: trimmedUserName,
+      slotAction,
+      createWarningFlash,
+      logCommandOutcome,
+      getCurrentRoute: () => currentRoute,
+      getCurrentUser: () => currentUser,
+      setFlashState,
+      onUserNameChange: setCurrentUser,
       onUserNameCommit: renderCurrentBoard,
       onNavigatePreviousDay: navigatePreviousDay,
       onNavigateNextDay: navigateNextDay,
