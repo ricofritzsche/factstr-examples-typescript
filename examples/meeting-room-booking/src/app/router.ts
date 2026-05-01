@@ -1,12 +1,18 @@
 import { defaultBoardDate } from './board_defaults';
 
-export type AppRoute = {
-  kind: 'board';
-  date: string;
-  hash: string;
-};
+export type AppRoute =
+  | {
+      kind: 'board';
+      date: string;
+      hash: string;
+    }
+  | {
+      kind: 'events';
+      hash: string;
+    };
 
 const boardPath = '/board';
+const eventsPath = '/events';
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 
 const isValidDate = (value: string) => {
@@ -23,9 +29,17 @@ const buildBoardHash = (date: string) => {
   return `#${boardPath}?date=${date}`;
 };
 
+const buildEventsHash = () => {
+  return `#${eventsPath}`;
+};
+
 const normalizeHash = (hash: string) => {
   const raw = hash.startsWith('#') ? hash.slice(1) : hash;
   const [path, search = ''] = raw.split('?');
+
+  if (path === eventsPath) {
+    return buildEventsHash();
+  }
 
   if (path !== boardPath) {
     return buildBoardHash(defaultBoardDate);
@@ -43,7 +57,17 @@ const normalizeHash = (hash: string) => {
 
 const readRoute = (hash: string): AppRoute => {
   const normalized = normalizeHash(hash);
-  const params = new URLSearchParams(normalized.split('?')[1] ?? '');
+  const raw = normalized.startsWith('#') ? normalized.slice(1) : normalized;
+  const [path, search = ''] = raw.split('?');
+
+  if (path === eventsPath) {
+    return {
+      kind: 'events',
+      hash: normalized,
+    };
+  }
+
+  const params = new URLSearchParams(search);
   const date = params.get('date') ?? defaultBoardDate;
 
   return {
@@ -61,6 +85,10 @@ export const shiftRouteDate = (date: string, dayOffset: number) => {
 
 export const navigateToBoardDate = (date: string) => {
   window.location.hash = buildBoardHash(date);
+};
+
+export const navigateToEvents = () => {
+  window.location.hash = buildEventsHash();
 };
 
 export const startRouter = ({

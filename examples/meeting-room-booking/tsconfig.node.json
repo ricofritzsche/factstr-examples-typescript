@@ -16,6 +16,7 @@
     "vite.config.ts",
     "src/app/board_defaults.ts",
     "src/app/create_store.ts",
+    "src/app/recent_events.ts",
     "src/events/**/*.ts",
     "src/features/**/*.ts"
   ]

@@ -1,4 +1,4 @@
-import type { InteropEventRecord } from '@factstr/factstr-node';
+import type { EventRecord } from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../events/slot_cancelled';
 import { SLOT_RESERVED } from '../../events/slot_reserved';
 import type { ReserveSlotResponse } from './response';
@@ -10,7 +10,7 @@ export type ReservationDecision =
   | ReserveSlotResponse;
 
 export const decideReservation = (
-  eventRecords: InteropEventRecord[],
+  eventRecords: EventRecord[],
 ): ReservationDecision => {
   const latestEvent = eventRecords.at(-1);
 

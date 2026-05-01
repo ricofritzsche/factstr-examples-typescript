@@ -1,11 +1,11 @@
-import type { FactstrMemoryStore, InteropEventQuery, InteropQueryResult } from '@factstr/factstr-node';
+import type { EventQuery, FactstrMemoryStore, QueryResult } from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../events/slot_cancelled';
 import { SLOT_RESERVED } from '../../events/slot_reserved';
 import type { ReserveSlotRequest } from './request';
 
 export type SlotContext = {
-  query: InteropEventQuery;
-  result: InteropQueryResult;
+  query: EventQuery;
+  result: QueryResult;
 };
 
 export const loadSlotContext = (
@@ -25,7 +25,7 @@ export const loadSlotContext = (
         ],
       },
     ],
-  } satisfies InteropEventQuery;
+  } satisfies EventQuery;
 
   return {
     query,

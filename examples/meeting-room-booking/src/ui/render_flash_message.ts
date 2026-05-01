@@ -17,7 +17,7 @@ export const renderFlashMessage = (
         : '#334155';
 
   return `
-    <section style="max-width: 1100px; margin: 24px auto 0; padding: 0 20px;">
+    <section style="max-width: 1100px; margin: 24px auto 0;">
       <div style="border-radius: 14px; padding: 14px 16px; background: ${background}; color: ${color}; font: 500 0.95rem/1.4 'IBM Plex Sans', 'Segoe UI', sans-serif;">
         ${message}
       </div>

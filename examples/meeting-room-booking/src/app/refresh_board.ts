@@ -5,6 +5,8 @@ import { renderFlashMessage } from '../ui/render_flash_message';
 import type { AppRoute } from './router';
 import { log } from './log';
 
+type BoardRoute = Extract<AppRoute, { kind: 'board' }>;
+
 export type FlashState = {
   message: string;
   tone: 'neutral' | 'success' | 'warning';
@@ -23,13 +25,14 @@ type RefreshBoardParams = {
   boardUrl: string;
   myReservationsUrl: string;
   flashState: FlashState;
-  route: AppRoute;
+  route: BoardRoute;
   currentUser: string;
   onSlotAction: (slotAction: SlotAction) => Promise<void>;
   onUserNameChange: (value: string) => void;
   onUserNameCommit: () => Promise<void>;
   onNavigatePreviousDay: () => void;
   onNavigateNextDay: () => void;
+  onNavigateEvents: () => void;
 };
 
 type RenderBoardScreenParams = {
@@ -37,16 +40,17 @@ type RenderBoardScreenParams = {
   board: BookingBoardResponse;
   myReservations: GetMyReservationsResponse;
   flashState: FlashState;
-  route: AppRoute;
+  route: BoardRoute;
   currentUser: string;
   onSlotAction: (slotAction: SlotAction) => Promise<void>;
   onUserNameChange: (value: string) => void;
   onUserNameCommit: () => Promise<void>;
   onNavigatePreviousDay: () => void;
   onNavigateNextDay: () => void;
+  onNavigateEvents: () => void;
 };
 
-export const loadBoard = async (boardUrl: string, route: AppRoute) => {
+export const loadBoard = async (boardUrl: string, route: BoardRoute) => {
   log.info('board-load-started', { route: route.hash, date: route.date });
 
   const response = await fetch(`${boardUrl}?date=${route.date}`);
@@ -63,7 +67,7 @@ export const loadBoard = async (boardUrl: string, route: AppRoute) => {
 
 export const loadMyReservations = async (
   myReservationsUrl: string,
-  route: AppRoute,
+  route: BoardRoute,
   currentUser: string,
 ) => {
   log.info('my-reservations-load-started', {
@@ -99,17 +103,26 @@ export const renderBoardScreen = ({
   onUserNameCommit,
   onNavigatePreviousDay,
   onNavigateNextDay,
+  onNavigateEvents,
 }: RenderBoardScreenParams) => {
   app.innerHTML = `
-    <section style="max-width: 1100px; margin: 0 auto; padding: 24px 20px 0;">
+    <section style="max-width: 1100px; margin: 0 auto; padding: 24px 0px 0;">
       <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-        <div>
-          <div style="margin-bottom: 6px; color: #6b7280; font: 600 0.82rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif; letter-spacing: 0.08em; text-transform: uppercase;">
-            Route Date
-          </div>
-          <div style="color: #111827; font: 700 1.15rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif;">
-            ${route.date}
-          </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+          <button
+            type="button"
+            disabled
+            style="padding: 10px 14px; border: 1px solid rgba(31, 41, 51, 0.12); border-radius: 999px; background: #1f2933; color: #fff; font: 600 0.92rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif; cursor: default;"
+          >
+            Board
+          </button>
+          <button
+            id="go-events"
+            type="button"
+            style="padding: 10px 14px; border: 1px solid rgba(31, 41, 51, 0.12); border-radius: 999px; background: rgba(255, 255, 255, 0.86); color: #1f2933; font: 600 0.92rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif; cursor: pointer;"
+          >
+            Recent Events
+          </button>
         </div>
         <div style="display: flex; gap: 10px;">
           <button
@@ -131,6 +144,9 @@ export const renderBoardScreen = ({
       <label for="user-name" style="display: block; margin-bottom: 8px; color: #334155; font: 600 0.95rem/1.4 'IBM Plex Sans', 'Segoe UI', sans-serif;">
         User
       </label>
+      <div style="margin-bottom: 10px; color: #111827; font: 700 1.15rem/1.2 'IBM Plex Sans', 'Segoe UI', sans-serif;">
+        ${route.date}
+      </div>
       <input
         id="user-name"
         name="user-name"
@@ -160,6 +176,9 @@ export const renderBoardScreen = ({
   const nextDayButton = document.querySelector<HTMLButtonElement>('#next-day');
   nextDayButton?.addEventListener('click', onNavigateNextDay);
 
+  const eventsButton = document.querySelector<HTMLButtonElement>('#go-events');
+  eventsButton?.addEventListener('click', onNavigateEvents);
+
   document.querySelectorAll<HTMLButtonElement>('.slot-action-button').forEach((button) => {
     button.addEventListener('click', async () => {
       await onSlotAction({
@@ -187,6 +206,7 @@ export const refreshBoard = async ({
   onUserNameCommit,
   onNavigatePreviousDay,
   onNavigateNextDay,
+  onNavigateEvents,
 }: RefreshBoardParams) => {
   const board = await loadBoard(boardUrl, route);
   const myReservations = await loadMyReservations(myReservationsUrl, route, currentUser);
@@ -203,5 +223,6 @@ export const refreshBoard = async ({
     onUserNameCommit,
     onNavigatePreviousDay,
     onNavigateNextDay,
+    onNavigateEvents,
   });
 };

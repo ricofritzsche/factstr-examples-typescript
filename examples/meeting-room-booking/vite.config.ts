@@ -3,6 +3,9 @@ import type { Connect, PreviewServer, ViteDevServer } from 'vite';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { boardRoomIds, boardSlots, defaultBoardDate } from './src/app/board_defaults';
 import { createStore } from './src/app/create_store';
+import type { RecentEventsResponse } from './src/app/recent_events';
+import { SLOT_CANCELLED } from './src/events/slot_cancelled';
+import { SLOT_RESERVED } from './src/events/slot_reserved';
 import { cancelSlot } from './src/features/cancel-slot/cancel_slot';
 import type { CancelSlotRequest } from './src/features/cancel-slot/request';
 import { getBookingBoard } from './src/features/booking-board/get_booking_board';
@@ -13,6 +16,7 @@ import type { ReserveSlotRequest } from './src/features/reserve-slot/request';
 const routeBase = '/__meeting-room-booking';
 const boardPath = `${routeBase}/board`;
 const cancelPath = `${routeBase}/cancel`;
+const eventsPath = `${routeBase}/events`;
 const myReservationsPath = `${routeBase}/my-reservations`;
 const reservePath = `${routeBase}/reserve`;
 const store = createStore();
@@ -58,6 +62,45 @@ const getMyReservationsForUser = (date: string, userName: string) => {
     date,
     user_name: userName,
   });
+};
+
+const getRecentEvents = (): RecentEventsResponse => {
+  const result = store.query({
+    filters: [
+      {
+        event_types: [SLOT_RESERVED, SLOT_CANCELLED],
+      },
+    ],
+  });
+
+  return {
+    events: [...result.event_records]
+      .sort((left, right) => {
+        if (left.sequence_number === right.sequence_number) {
+          return 0;
+        }
+
+        return left.sequence_number > right.sequence_number ? -1 : 1;
+      })
+      .slice(0, 10)
+      .map((event) => {
+        const payload = event.payload as {
+          room_id: string;
+          date: string;
+          slot: string;
+          user_name: string;
+        };
+
+        return {
+          sequence_number: event.sequence_number.toString(),
+          event_type: event.event_type,
+          room_id: payload.room_id,
+          date: payload.date,
+          slot: payload.slot,
+          user_name: payload.user_name,
+        };
+      }),
+  };
 };
 
 const readJsonBody = async (request: IncomingMessage) => {
@@ -117,6 +160,18 @@ const handleRuntimeRequest = async (
       date: normalizedDate,
       user_name: userName,
       reservation_count: result.reservations.length,
+    });
+    response.setHeader('content-type', 'application/json; charset=utf-8');
+    response.end(JSON.stringify(result));
+    return true;
+  }
+
+  if (method === 'GET' && pathname === eventsPath) {
+    const result = getRecentEvents();
+
+    runtimeLog.info('recent-events-requested', {
+      route: eventsPath,
+      event_count: result.events.length,
     });
     response.setHeader('content-type', 'application/json; charset=utf-8');
     response.end(JSON.stringify(result));

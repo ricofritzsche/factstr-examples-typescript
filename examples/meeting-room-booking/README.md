@@ -38,6 +38,19 @@ This is still not authentication and not a provider model.
 Providers do not exist yet.
 This step uses seeded in-memory events only.
 
+## How The UI Updates
+
+The UI does not keep a mutable client-side copy of the booking board and patch it in place.
+
+Instead, each reserve or cancel action appends a new fact to the single in-memory FACTSTR store running behind the Vite example runtime. After that, the app reloads the relevant query views for the current route and user:
+
+- the booking board for the selected date
+- the current user's active reservations for that same date
+
+Those views are projected again from the latest event log and then rendered again in the browser.
+
+That means the visible state always comes from fresh query results, not from optimistic UI updates or hidden client state.
+
 ## Install
 
 ```bash

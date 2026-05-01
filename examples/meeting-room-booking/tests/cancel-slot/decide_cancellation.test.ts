@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { InteropEventRecord } from '@factstr/factstr-node';
+import type { EventRecord } from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
 import { decideCancellation } from '../../src/features/cancel-slot/decide_cancellation';
 
-const record = (event_type: string, payload: unknown, sequence_number = 1n): InteropEventRecord => ({
+const record = (event_type: string, payload: unknown, sequence_number = 1n): EventRecord => ({
   sequence_number,
   event_type,
   payload,

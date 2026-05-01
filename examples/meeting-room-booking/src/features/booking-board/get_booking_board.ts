@@ -1,4 +1,4 @@
-import type { FactstrMemoryStore, InteropEventRecord } from '@factstr/factstr-node';
+import type { EventRecord, FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED, type SlotCancelledEvent } from '../../events/slot_cancelled';
 import { SLOT_RESERVED, type SlotReservedEvent } from '../../events/slot_reserved';
 import { loadBoardFacts } from './load_board_facts';
@@ -7,7 +7,7 @@ import type { GetBookingBoardRequest } from './request';
 
 type BookingBoardEvent = SlotReservedEvent | SlotCancelledEvent;
 
-const isBookingBoardEventRecord = (event: InteropEventRecord) =>
+const isBookingBoardEventRecord = (event: EventRecord) =>
   event.event_type === SLOT_RESERVED || event.event_type === SLOT_CANCELLED;
 
 const toBookingBoardEvent = (event: {
