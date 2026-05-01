@@ -2,7 +2,7 @@
 
 This example is a small browser app built with `@factstr/factstr-node`, plain TypeScript, plain HTML, and plain CSS.
 
-It shows a simple, explicit way to do event sourcing with FACTSTR.
+It shows a simple, explicit way to do event sourcing with [FACTSTR](https://factstr.com).
 
 A reservation is not stored by mutating a room object or slot object in place. The app appends facts such as `slot-reserved` and `slot-cancelled`. The visible state is then rebuilt from those facts.
 
