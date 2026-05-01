@@ -38,7 +38,7 @@ That is the core shape of the example:
 3. project current state
 4. render the result
 
-## Why `appendIf` matters
+## Conditional append
 
 A reserve or cancel action depends on the state of one slot:
 
@@ -97,26 +97,31 @@ This folder renders the view models and binds browser interactions to the app la
 
 ```mermaid
 flowchart LR
-    UI[User action in browser]
-    APP[app/ orchestration]
-    CMD[reserve-slot or cancel-slot]
+    UI[User action]
+    APP[app/]
+    CMD[command slice]
     STORE[FactstrMemoryStore]
-    Q1[get-booking-board]
-    Q2[get-my-reservations]
-    VIEW[Rendered UI]
+    QB[get-booking-board]
+    QM[get-my-reservations]
+    BOARD[Board view]
+    MINE[My reservations view]
 
     UI --> APP
     APP --> CMD
     CMD --> STORE
-    APP --> Q1
-    APP --> Q2
-    Q1 --> VIEW
-    Q2 --> VIEW
+
+    APP --> QB
+    APP --> QM
+    QB --> STORE
+    QM --> STORE
+
+    QB --> BOARD
+    QM --> MINE
 ````
 
 The important part is that the UI is not treated as the source of truth. The event log is.
 
-## The event flow in one picture
+## The Event Flow
 
 ```mermaid
 sequenceDiagram
@@ -141,7 +146,7 @@ sequenceDiagram
     A->>R: rerender board + message
 ```
 
-## Core code examples
+## Code Examples
 
 ### Shared event contract
 
@@ -165,7 +170,7 @@ export type SlotReservedEvent = {
 
 `src/events/` contains only this kind of declarative shape. It does not contain decision logic, append logic, or projections.
 
-### Command flow
+### Command Context
 
 A command feature reads the relevant context, decides locally, builds an event, and appends it.
 
@@ -205,7 +210,7 @@ export const reserveSlot = (
 
 The feature does not own UI messaging beyond its explicit result. The app layer combines that result with refreshed query state to produce the final user-facing message.
 
-### Query flow
+### Query Flow
 
 A query feature loads relevant facts and projects current state.
 
@@ -228,7 +233,7 @@ The same store supports both:
 * command interactions that append facts
 * query interactions that rebuild current state
 
-### App composition
+### App Composition
 
 `main.ts` stays minimal.
 
