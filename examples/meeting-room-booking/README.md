@@ -117,7 +117,7 @@ flowchart LR
 
     QB --> BOARD
     QM --> MINE
-````
+```
 
 The important part is that the UI is not treated as the source of truth. The event log is.
 
@@ -187,7 +187,12 @@ export const reserveSlot = (
   }
 
   const event = buildSlotReserved(request);
-  const appendResult = appendSlotReserved(store, event, slotContext.query, slotContext.result.current_context_version ?? null);
+  const appendResult = appendSlotReserved(
+    store,
+    event,
+    slotContext.query,
+    slotContext.result.current_context_version ?? null,
+  );
 
   if (appendResult.conflict) {
     return {
@@ -203,7 +208,9 @@ export const reserveSlot = (
 };
 ```
 
-The feature does not own UI messaging beyond its explicit result. The app layer combines that result with refreshed query state to produce the final user-facing message.
+The browser does not send a store-level version token back to the feature.
+
+The feature loads the relevant slot context itself, decides against the latest facts, and performs the conditional append internally. That keeps the application boundary simple while still making concurrent changes explicit.
 
 ### Query Flow
 
@@ -225,8 +232,8 @@ export const getMyReservations = (
 
 The same store supports both:
 
-* command interactions that append facts
-* query interactions that rebuild current state
+- command interactions that append facts
+- query interactions that rebuild current state
 
 ### App Composition
 
@@ -246,18 +253,18 @@ The example stays deliberately small.
 
 It does not use:
 
-* framework architecture
-* service layers
-* repositories
-* managers
-* provider systems
-* a hidden mutable client-side board model
+- framework architecture
+- service layers
+- repositories
+- managers
+- provider systems
+- a hidden mutable client-side board model
 
 The aim is to show the simplest useful shape:
 
-* shared event definitions
-* feature-local behavior
-* explicit command and query flows
+- shared event definitions
+- feature-local behavior
+- explicit command and query flows
 * app-level composition only
 
 ## Example boundary
