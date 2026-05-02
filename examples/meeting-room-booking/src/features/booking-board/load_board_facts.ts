@@ -5,12 +5,17 @@ import type { GetBookingBoardRequest } from './request';
 
 export const loadBoardFacts = (
   store: FactstrMemoryStore,
-  _request: GetBookingBoardRequest,
+  request: GetBookingBoardRequest,
 ) => {
   return store.query({
     filters: [
       {
         event_types: [SLOT_RESERVED, SLOT_CANCELLED],
+        payload_predicates: [
+          {
+            date: request.date,
+          },
+        ],
       },
     ],
   });

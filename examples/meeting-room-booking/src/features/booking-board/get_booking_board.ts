@@ -1,4 +1,4 @@
-import type { EventRecord, FactstrMemoryStore } from '@factstr/factstr-node';
+import type { FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED, type SlotCancelledEvent } from '../../events/slot_cancelled';
 import { SLOT_RESERVED, type SlotReservedEvent } from '../../events/slot_reserved';
 import { loadBoardFacts } from './load_board_facts';
@@ -7,11 +7,8 @@ import type { GetBookingBoardRequest } from './request';
 
 type BookingBoardEvent = SlotReservedEvent | SlotCancelledEvent;
 
-const isBookingBoardEventRecord = (event: EventRecord) =>
-  event.event_type === SLOT_RESERVED || event.event_type === SLOT_CANCELLED;
-
 const toBookingBoardEvent = (event: {
-  event_type: string;
+  event_type: typeof SLOT_RESERVED | typeof SLOT_CANCELLED;
   payload: unknown;
 }): BookingBoardEvent => {
   if (event.event_type === SLOT_RESERVED) {
@@ -32,7 +29,12 @@ export const getBookingBoard = (
   request: GetBookingBoardRequest,
 ) => {
   const result = loadBoardFacts(store, request);
-  const events = result.event_records.filter(isBookingBoardEventRecord).map(toBookingBoardEvent);
+  const events = result.event_records.map((event) =>
+    toBookingBoardEvent({
+      event_type: event.event_type as typeof SLOT_RESERVED | typeof SLOT_CANCELLED,
+      payload: event.payload,
+    }),
+  );
 
   return projectBoard(request, events);
 };
