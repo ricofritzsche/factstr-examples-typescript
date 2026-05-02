@@ -17,7 +17,6 @@ export type SlotAction = {
   date: string;
   slot: string;
   status: 'free' | 'reserved';
-  contextVersion: string | null;
 };
 
 type RefreshBoardParams = {
@@ -186,7 +185,6 @@ export const renderBoardScreen = ({
         date: button.dataset.date ?? '',
         slot: button.dataset.slot ?? '',
         status: (button.dataset.status as 'free' | 'reserved') ?? 'free',
-        contextVersion: button.dataset.contextVersion || null,
       });
     });
   });

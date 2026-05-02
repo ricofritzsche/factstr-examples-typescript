@@ -33,7 +33,6 @@ export const renderBoard = (
                       data-date="${board.date}"
                       data-slot="${slot.slot}"
                       data-status="${slot.status}"
-                      data-context-version="${slot.slot_context_version ?? ''}"
                       type="button"
                     >
                       ${slot.status === 'free' ? 'Reserve' : 'Cancel'}

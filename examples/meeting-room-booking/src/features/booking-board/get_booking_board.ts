@@ -2,7 +2,6 @@ import type { EventRecord, FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED, type SlotCancelledEvent } from '../../events/slot_cancelled';
 import { SLOT_RESERVED, type SlotReservedEvent } from '../../events/slot_reserved';
 import { loadBoardFacts } from './load_board_facts';
-import { loadSlotContextVersions } from './load_slot_context_versions';
 import { projectBoard } from './project_board';
 import type { GetBookingBoardRequest } from './request';
 
@@ -34,7 +33,6 @@ export const getBookingBoard = (
 ) => {
   const result = loadBoardFacts(store, request);
   const events = result.event_records.filter(isBookingBoardEventRecord).map(toBookingBoardEvent);
-  const slotContextVersions = loadSlotContextVersions(store, request);
 
-  return projectBoard(request, events, slotContextVersions);
+  return projectBoard(request, events);
 };

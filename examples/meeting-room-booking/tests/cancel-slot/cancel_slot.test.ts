@@ -1,10 +1,28 @@
 import { describe, expect, it } from 'vitest';
+import type { AppendIfResult, EventQuery, NewEvent } from '@factstr/factstr-node';
 import factstrNode from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
 import { cancelSlot } from '../../src/features/cancel-slot/cancel_slot';
 
 const { FactstrMemoryStore } = factstrNode;
+
+const simulateConcurrentChangeDuringAppendIf = (
+  store: InstanceType<typeof FactstrMemoryStore>,
+  concurrentEvent: NewEvent,
+) => {
+  const originalAppendIf = store.appendIf.bind(store);
+
+  store.appendIf = (
+    events: NewEvent[],
+    query: EventQuery,
+    expectedContextVersion?: bigint | null,
+  ): AppendIfResult => {
+    store.append([concurrentEvent]);
+
+    return originalAppendIf(events, query, expectedContextVersion);
+  };
+};
 
 describe('cancelSlot', () => {
   it('appends a cancellation event on success', () => {
@@ -26,7 +44,6 @@ describe('cancelSlot', () => {
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Nadia',
-      expected_context_version: '1',
     });
 
     expect(result).toEqual({
@@ -57,7 +74,6 @@ describe('cancelSlot', () => {
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Alex',
-      expected_context_version: null,
     });
 
     const after = store.query({ filters: [{ event_types: [SLOT_RESERVED, SLOT_CANCELLED] }] })
@@ -80,7 +96,7 @@ describe('cancelSlot', () => {
           room_id: 'Atlas',
           date: '2026-05-01',
           slot: '09:00',
-          user_name: 'Nadia',
+          user_name: 'Priya',
         },
       },
     ]);
@@ -93,7 +109,6 @@ describe('cancelSlot', () => {
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Alex',
-      expected_context_version: '1',
     });
 
     const after = store.query({ filters: [{ event_types: [SLOT_RESERVED, SLOT_CANCELLED] }] })
@@ -102,32 +117,14 @@ describe('cancelSlot', () => {
     expect(result).toEqual({
       status: 'rejection',
       reason: 'slot-owned-by-another-user',
-      message: 'Slot is reserved by Nadia. Only the matching reserver can cancel it.',
+      message: 'Slot is reserved by Priya. Only the matching reserver can cancel it.',
     });
     expect(after).toBe(before);
   });
 
-  it('returns explicit conflict when expected context version is stale', () => {
+  it('returns explicit conflict when the slot changes between load and append', () => {
     const store = new FactstrMemoryStore();
     store.append([
-      {
-        event_type: SLOT_RESERVED,
-        payload: {
-          room_id: 'Atlas',
-          date: '2026-05-01',
-          slot: '09:00',
-          user_name: 'Nadia',
-        },
-      },
-      {
-        event_type: SLOT_CANCELLED,
-        payload: {
-          room_id: 'Atlas',
-          date: '2026-05-01',
-          slot: '09:00',
-          user_name: 'Nadia',
-        },
-      },
       {
         event_type: SLOT_RESERVED,
         payload: {
@@ -139,12 +136,21 @@ describe('cancelSlot', () => {
       },
     ]);
 
+    simulateConcurrentChangeDuringAppendIf(store, {
+      event_type: SLOT_CANCELLED,
+      payload: {
+        room_id: 'Atlas',
+        date: '2026-05-01',
+        slot: '09:00',
+        user_name: 'Priya',
+      },
+    });
+
     const result = cancelSlot(store, {
       room_id: 'Atlas',
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Priya',
-      expected_context_version: '1',
     });
 
     expect(result).toEqual({

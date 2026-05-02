@@ -4,6 +4,7 @@ import { readJsonBody } from '../../app/read_json_body';
 import { runtimeLog } from '../../app/runtime_log';
 import { cancelSlot } from './cancel_slot';
 import type { CancelSlotRequest } from './request';
+import { validateCancelRequest } from './validate_request';
 
 export const httpPostCancelSlot = async (
   store: FactstrMemoryStore,
@@ -11,6 +12,22 @@ export const httpPostCancelSlot = async (
   response: HttpResponse,
 ) => {
   const cancelRequest = await readJsonBody<CancelSlotRequest>(request);
+  const invalidRequest = validateCancelRequest(cancelRequest);
+
+  if (invalidRequest) {
+    runtimeLog.warn('cancel-slot-invalid-request', {
+      room_id: cancelRequest.room_id,
+      date: cancelRequest.date,
+      slot: cancelRequest.slot,
+      user_name: cancelRequest.user_name,
+      message: invalidRequest.message,
+    });
+    response.statusCode = 400;
+    response.setHeader('content-type', 'application/json; charset=utf-8');
+    response.end(JSON.stringify(invalidRequest));
+    return;
+  }
+
   const result = cancelSlot(store, cancelRequest);
 
   if (result.status === 'success') {
@@ -28,7 +45,6 @@ export const httpPostCancelSlot = async (
       date: cancelRequest.date,
       slot: cancelRequest.slot,
       user_name: cancelRequest.user_name,
-      expected_context_version: cancelRequest.expected_context_version,
     });
   } else {
     runtimeLog.warn('cancel-slot-rejection', {

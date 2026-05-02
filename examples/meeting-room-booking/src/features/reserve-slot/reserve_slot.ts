@@ -6,14 +6,6 @@ import { loadSlotContext } from './load_slot_context';
 import type { ReserveSlotRequest } from './request';
 import type { ReserveSlotResponse } from './response';
 
-const parseExpectedContextVersion = (value: string | null) => {
-  if (value === null) {
-    return null;
-  }
-
-  return BigInt(value);
-};
-
 export const reserveSlot = (
   store: FactstrMemoryStore,
   request: ReserveSlotRequest,
@@ -30,7 +22,7 @@ export const reserveSlot = (
     store,
     event,
     slotContext.query,
-    parseExpectedContextVersion(request.expected_context_version),
+    slotContext.result.current_context_version ?? null,
   );
 
   if (appendResult.conflict) {

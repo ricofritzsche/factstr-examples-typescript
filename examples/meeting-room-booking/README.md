@@ -187,12 +187,7 @@ export const reserveSlot = (
   }
 
   const event = buildSlotReserved(request);
-  const appendResult = appendSlotReserved(
-    store,
-    event,
-    slotContext.query,
-    parseExpectedContextVersion(request.expected_context_version),
-  );
+  const appendResult = appendSlotReserved(store, event, slotContext.query, slotContext.result.current_context_version ?? null);
 
   if (appendResult.conflict) {
     return {
@@ -304,4 +299,3 @@ npm run build
 ```bash
 npm run preview
 ```
-

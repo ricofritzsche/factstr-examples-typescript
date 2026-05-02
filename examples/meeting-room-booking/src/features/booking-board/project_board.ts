@@ -21,7 +21,6 @@ const createSlotKey = (roomId: string, date: string, slot: string) =>
 export const projectBoard = (
   request: GetBookingBoardRequest,
   events: BookingBoardEvent[],
-  slotContextVersions: Map<string, bigint | null>,
 ): BookingBoardResponse => {
   const relevantRooms = new Set(request.room_ids);
   const relevantSlots = new Set(request.slots);
@@ -65,8 +64,6 @@ export const projectBoard = (
           slot,
           status: slotState.status,
           user_name: slotState.user_name,
-          slot_context_version:
-            slotContextVersions.get(createSlotKey(room_id, request.date, slot))?.toString() ?? null,
         };
       }),
     })),

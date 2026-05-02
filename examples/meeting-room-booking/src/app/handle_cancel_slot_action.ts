@@ -53,7 +53,6 @@ export const handleCancelSlotAction = async ({
     date: slotAction.date,
     slot: slotAction.slot,
     user_name: actingUser,
-    expected_context_version: slotAction.contextVersion,
   });
 
   logCommandOutcome('cancel-slot', result, slotAction, actingUser);

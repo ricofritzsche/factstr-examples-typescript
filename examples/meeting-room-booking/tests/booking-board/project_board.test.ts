@@ -25,14 +25,12 @@ describe('projectBoard', () => {
           },
         },
       ],
-      new Map([['Atlas::2026-05-01::09:00', 1n]]),
     );
 
     expect(board.rooms[0]?.slots[0]).toEqual({
       slot: '09:00',
       status: 'reserved',
       user_name: 'Nadia',
-      slot_context_version: '1',
     });
   });
 
@@ -59,14 +57,12 @@ describe('projectBoard', () => {
           },
         },
       ],
-      new Map([['Atlas::2026-05-01::09:00', 2n]]),
     );
 
     expect(board.rooms[0]?.slots[0]).toEqual({
       slot: '09:00',
       status: 'free',
       user_name: null,
-      slot_context_version: '2',
     });
   });
 
@@ -102,14 +98,12 @@ describe('projectBoard', () => {
           },
         },
       ],
-      new Map([['Atlas::2026-05-01::10:00', 3n]]),
     );
 
     expect(board.rooms[0]?.slots[1]).toEqual({
       slot: '10:00',
       status: 'reserved',
       user_name: 'Alex',
-      slot_context_version: '3',
     });
   });
 
@@ -145,10 +139,6 @@ describe('projectBoard', () => {
           },
         },
       ],
-      new Map([
-        ['Atlas::2026-05-01::09:00', 1n],
-        ['Cedar::2026-05-01::10:00', 2n],
-      ]),
     );
 
     expect(board.rooms).toEqual([
@@ -159,13 +149,11 @@ describe('projectBoard', () => {
             slot: '09:00',
             status: 'reserved',
             user_name: 'Nadia',
-            slot_context_version: '1',
           },
           {
             slot: '10:00',
             status: 'free',
             user_name: null,
-            slot_context_version: null,
           },
         ],
       },
@@ -176,13 +164,11 @@ describe('projectBoard', () => {
             slot: '09:00',
             status: 'free',
             user_name: null,
-            slot_context_version: null,
           },
           {
             slot: '10:00',
             status: 'reserved',
             user_name: 'Priya',
-            slot_context_version: '2',
           },
         ],
       },

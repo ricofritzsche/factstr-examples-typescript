@@ -13,7 +13,6 @@ const boardWithSlot = (status: 'free' | 'reserved', userName: string | null): Bo
           slot: '09:00',
           status,
           user_name: userName,
-          slot_context_version: '1',
         },
       ],
     },

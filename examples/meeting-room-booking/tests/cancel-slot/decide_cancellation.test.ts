@@ -25,7 +25,6 @@ describe('decideCancellation', () => {
         date: '2026-05-01',
         slot: '09:00',
         user_name: 'Nadia',
-        expected_context_version: '1',
       }),
     ).toEqual({ status: 'allow' });
   });
@@ -36,7 +35,6 @@ describe('decideCancellation', () => {
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Alex',
-      expected_context_version: null,
     })).toEqual({
       status: 'rejection',
       reason: 'slot-already-free',
@@ -66,7 +64,6 @@ describe('decideCancellation', () => {
         date: '2026-05-01',
         slot: '09:00',
         user_name: 'Alex',
-        expected_context_version: '2',
       }),
     ).toEqual({
       status: 'rejection',
@@ -89,7 +86,6 @@ describe('decideCancellation', () => {
         date: '2026-05-01',
         slot: '09:00',
         user_name: 'Alex',
-        expected_context_version: '1',
       }),
     ).toEqual({
       status: 'rejection',

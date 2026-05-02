@@ -6,14 +6,6 @@ import { loadSlotContext } from './load_slot_context';
 import type { CancelSlotRequest } from './request';
 import type { CancelSlotResponse } from './response';
 
-const parseExpectedContextVersion = (value: string | null) => {
-  if (value === null) {
-    return null;
-  }
-
-  return BigInt(value);
-};
-
 export const cancelSlot = (
   store: FactstrMemoryStore,
   request: CancelSlotRequest,
@@ -30,7 +22,7 @@ export const cancelSlot = (
     store,
     event,
     slotContext.query,
-    parseExpectedContextVersion(request.expected_context_version),
+    slotContext.result.current_context_version ?? null,
   );
 
   if (appendResult.conflict) {

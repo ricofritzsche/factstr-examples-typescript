@@ -1,10 +1,28 @@
 import { describe, expect, it } from 'vitest';
+import type { AppendIfResult, EventQuery, NewEvent } from '@factstr/factstr-node';
 import factstrNode from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
 import { reserveSlot } from '../../src/features/reserve-slot/reserve_slot';
 
 const { FactstrMemoryStore } = factstrNode;
+
+const simulateConcurrentChangeDuringAppendIf = (
+  store: InstanceType<typeof FactstrMemoryStore>,
+  concurrentEvent: NewEvent,
+) => {
+  const originalAppendIf = store.appendIf.bind(store);
+
+  store.appendIf = (
+    events: NewEvent[],
+    query: EventQuery,
+    expectedContextVersion?: bigint | null,
+  ): AppendIfResult => {
+    store.append([concurrentEvent]);
+
+    return originalAppendIf(events, query, expectedContextVersion);
+  };
+};
 
 describe('reserveSlot', () => {
   it('appends a reservation event on success', () => {
@@ -15,7 +33,6 @@ describe('reserveSlot', () => {
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Alex',
-      expected_context_version: null,
     });
 
     expect(result).toEqual({
@@ -57,7 +74,6 @@ describe('reserveSlot', () => {
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Alex',
-      expected_context_version: '1',
     });
 
     const after = store.query({ filters: [{ event_types: [SLOT_RESERVED, SLOT_CANCELLED] }] })
@@ -71,36 +87,24 @@ describe('reserveSlot', () => {
     expect(after).toBe(before);
   });
 
-  it('returns explicit conflict when expected context version is stale', () => {
+  it('returns explicit conflict when the slot changes between load and append', () => {
     const store = new FactstrMemoryStore();
 
-    store.append([
-      {
-        event_type: SLOT_RESERVED,
-        payload: {
-          room_id: 'Atlas',
-          date: '2026-05-01',
-          slot: '09:00',
-          user_name: 'Nadia',
-        },
+    simulateConcurrentChangeDuringAppendIf(store, {
+      event_type: SLOT_RESERVED,
+      payload: {
+        room_id: 'Atlas',
+        date: '2026-05-01',
+        slot: '09:00',
+        user_name: 'Nadia',
       },
-      {
-        event_type: SLOT_CANCELLED,
-        payload: {
-          room_id: 'Atlas',
-          date: '2026-05-01',
-          slot: '09:00',
-          user_name: 'Nadia',
-        },
-      },
-    ]);
+    });
 
     const result = reserveSlot(store, {
       room_id: 'Atlas',
       date: '2026-05-01',
       slot: '09:00',
       user_name: 'Alex',
-      expected_context_version: null,
     });
 
     expect(result).toEqual({

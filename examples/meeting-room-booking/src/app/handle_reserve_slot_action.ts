@@ -54,7 +54,6 @@ export const handleReserveSlotAction = async ({
     date: slotAction.date,
     slot: slotAction.slot,
     user_name: actingUser,
-    expected_context_version: slotAction.contextVersion,
   });
 
   logCommandOutcome('reserve-slot', result, slotAction, actingUser);
