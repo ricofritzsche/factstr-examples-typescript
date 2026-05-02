@@ -8,15 +8,19 @@
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "allowSyntheticDefaultImports": true,
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types"]
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "vite.config.ts",
     "src/app/board_defaults.ts",
     "src/app/create_store.ts",
+    "src/app/http_app.ts",
+    "src/app/http_get_recent_events.ts",
+    "src/app/http_types.ts",
+    "src/app/normalize_board_date.ts",
+    "src/app/read_json_body.ts",
     "src/app/recent_events.ts",
+    "src/app/runtime_log.ts",
     "src/events/**/*.ts",
     "src/features/**/*.ts"
   ]
