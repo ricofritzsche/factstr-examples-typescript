@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
-import { projectBoard } from '../../src/features/get-booking-board/project_board';
+import { projectBookingBoard } from '../../src/features/get-booking-board/project_booking_board';
 import type { GetBookingBoardRequest } from '../../src/features/get-booking-board/request';
 
 const request: GetBookingBoardRequest = {
@@ -10,9 +10,9 @@ const request: GetBookingBoardRequest = {
   slots: ['09:00', '10:00'],
 };
 
-describe('projectBoard', () => {
+describe('projectBookingBoard', () => {
   it('shows reserved slots as reserved', () => {
-    const board = projectBoard(
+    const board = projectBookingBoard(
       request,
       [
         {
@@ -35,7 +35,7 @@ describe('projectBoard', () => {
   });
 
   it('turns a cancelled slot back to free', () => {
-    const board = projectBoard(
+    const board = projectBookingBoard(
       request,
       [
         {
@@ -67,7 +67,7 @@ describe('projectBoard', () => {
   });
 
   it('lets the latest relevant fact win for a slot', () => {
-    const board = projectBoard(
+    const board = projectBookingBoard(
       request,
       [
         {
@@ -108,7 +108,7 @@ describe('projectBoard', () => {
   });
 
   it('handles multiple rooms and slots correctly', () => {
-    const board = projectBoard(
+    const board = projectBookingBoard(
       request,
       [
         {

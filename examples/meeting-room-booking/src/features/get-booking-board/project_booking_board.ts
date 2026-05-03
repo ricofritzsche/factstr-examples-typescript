@@ -18,7 +18,7 @@ const createSlotState = (): SlotState => ({
 const createSlotKey = (roomId: string, date: string, slot: string) =>
   `${roomId}::${date}::${slot}`;
 
-export const projectBoard = (
+export const projectBookingBoard = (
   request: GetBookingBoardRequest,
   events: BookingBoardEvent[],
 ): BookingBoardResponse => {

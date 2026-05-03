@@ -2,7 +2,7 @@ import type { FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED, type SlotCancelledEvent } from '../../events/slot_cancelled';
 import { SLOT_RESERVED, type SlotReservedEvent } from '../../events/slot_reserved';
 import { loadBoardFacts } from './load_board_facts';
-import { projectBoard } from './project_board';
+import { projectBookingBoard } from './project_booking_board';
 import type { GetBookingBoardRequest } from './request';
 
 type BookingBoardEvent = SlotReservedEvent | SlotCancelledEvent;
@@ -36,5 +36,5 @@ export const getBookingBoard = (
     }),
   );
 
-  return projectBoard(request, events);
+  return projectBookingBoard(request, events);
 };
