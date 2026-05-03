@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
-import { projectBoard } from '../../src/features/booking-board/project_board';
-import type { GetBookingBoardRequest } from '../../src/features/booking-board/request';
+import { projectBoard } from '../../src/features/get-booking-board/project_board';
+import type { GetBookingBoardRequest } from '../../src/features/get-booking-board/request';
 
 const request: GetBookingBoardRequest = {
   date: '2026-05-01',

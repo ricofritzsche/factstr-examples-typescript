@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildReserveFlashMessage } from '../../src/app/build_reserve_flash_message';
-import type { BookingBoardResponse } from '../../src/features/booking-board/response';
+import type { BookingBoardResponse } from '../../src/features/get-booking-board/response';
 import type { ReserveSlotResponse } from '../../src/features/reserve-slot/response';
 
 const boardWithSlot = (status: 'free' | 'reserved', userName: string | null): BookingBoardResponse => ({

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
-import { loadBoardFacts } from '../../src/features/booking-board/load_board_facts';
+import { loadBoardFacts } from '../../src/features/get-booking-board/load_board_facts';
 
 describe('loadBoardFacts', () => {
   it('queries only the requested day of board facts', () => {

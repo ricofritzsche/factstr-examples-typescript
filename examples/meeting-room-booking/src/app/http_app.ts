@@ -1,6 +1,6 @@
 import type { FactstrMemoryStore } from '@factstr/factstr-node';
 import { httpGetRecentEvents } from './http_get_recent_events';
-import { httpGetBookingBoard } from '../features/booking-board/http_get_booking_board';
+import { httpGetBookingBoard } from '../features/get-booking-board/http_get_booking_board';
 import { httpGetMyReservations } from '../features/get-my-reservations/http_get_my_reservations';
 import { httpPostReserveSlot } from '../features/reserve-slot/http_post_reserve_slot';
 import { httpPostCancelSlot } from '../features/cancel-slot/http_post_cancel_slot';

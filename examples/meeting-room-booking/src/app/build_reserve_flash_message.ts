@@ -1,4 +1,4 @@
-import type { BookingBoardResponse, BookingBoardSlotView } from '../features/booking-board/response';
+import type { BookingBoardResponse, BookingBoardSlotView } from '../features/get-booking-board/response';
 import type { ReserveSlotResponse } from '../features/reserve-slot/response';
 
 type BuildReserveFlashMessageParams = {

@@ -1,4 +1,4 @@
-import type { BookingBoardResponse } from '../features/booking-board/response';
+import type { BookingBoardResponse } from '../features/get-booking-board/response';
 import type { GetMyReservationsResponse } from '../features/get-my-reservations/response';
 import { renderBoard } from '../ui/render_board';
 import { renderFlashMessage } from '../ui/render_flash_message';

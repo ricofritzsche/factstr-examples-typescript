@@ -76,7 +76,7 @@ Command features:
 
 Query features:
 
-- `booking-board`
+- `get-booking-board`
 - `get-my-reservations`
 
 Each feature owns its own flow, pure logic, and shell code.
