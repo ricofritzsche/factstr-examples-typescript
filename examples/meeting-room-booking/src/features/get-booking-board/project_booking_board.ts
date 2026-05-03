@@ -30,10 +30,6 @@ export const projectBookingBoard = (
   for (const record of records) {
     const { room_id, date, slot } = record.payload;
 
-    if (date !== request.date) {
-      continue;
-    }
-
     if (!boardRooms.has(room_id) || !boardSlots.has(slot)) {
       continue;
     }
