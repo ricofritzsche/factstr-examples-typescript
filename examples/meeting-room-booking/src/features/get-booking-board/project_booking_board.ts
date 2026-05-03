@@ -3,7 +3,7 @@ import { SLOT_RESERVED, type SlotReservedEvent } from '../../events/slot_reserve
 import type { GetBookingBoardRequest } from './request';
 import type { BookingBoardResponse } from './response';
 
-type BookingBoardEvent = SlotReservedEvent | SlotCancelledEvent;
+type BookingBoardRecord = SlotReservedEvent | SlotCancelledEvent;
 
 type SlotState = {
   status: 'free' | 'reserved';
@@ -20,14 +20,14 @@ const createSlotKey = (roomId: string, date: string, slot: string) =>
 
 export const projectBookingBoard = (
   request: GetBookingBoardRequest,
-  events: BookingBoardEvent[],
+  records: BookingBoardRecord[],
 ): BookingBoardResponse => {
   const relevantRooms = new Set(request.room_ids);
   const relevantSlots = new Set(request.slots);
   const slotStates = new Map<string, SlotState>();
 
-  for (const event of events) {
-    const { room_id, date, slot } = event.payload;
+  for (const record of records) {
+    const { room_id, date, slot } = record.payload;
 
     if (date !== request.date) {
       continue;
@@ -39,15 +39,15 @@ export const projectBookingBoard = (
 
     const slotKey = createSlotKey(room_id, date, slot);
 
-    if (event.event_type === SLOT_RESERVED) {
+    if (record.event_type === SLOT_RESERVED) {
       slotStates.set(slotKey, {
         status: 'reserved',
-        user_name: event.payload.user_name,
+        user_name: record.payload.user_name,
       });
       continue;
     }
 
-    if (event.event_type === SLOT_CANCELLED) {
+    if (record.event_type === SLOT_CANCELLED) {
       slotStates.set(slotKey, createSlotState());
     }
   }

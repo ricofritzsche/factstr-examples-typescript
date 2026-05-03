@@ -5,12 +5,12 @@ import { loadBoardFacts } from './load_board_facts';
 import { projectBookingBoard } from './project_booking_board';
 import type { GetBookingBoardRequest } from './request';
 
-type BookingBoardEvent = SlotReservedEvent | SlotCancelledEvent;
+type BookingBoardRecord = SlotReservedEvent | SlotCancelledEvent;
 
-const toBookingBoardEvent = (event: {
+const toBookingBoardRecord = (event: {
   event_type: typeof SLOT_RESERVED | typeof SLOT_CANCELLED;
   payload: unknown;
-}): BookingBoardEvent => {
+}): BookingBoardRecord => {
   if (event.event_type === SLOT_RESERVED) {
     return {
       event_type: SLOT_RESERVED,
@@ -29,12 +29,12 @@ export const getBookingBoard = (
   request: GetBookingBoardRequest,
 ) => {
   const result = loadBoardFacts(store, request);
-  const events = result.event_records.map((event) =>
-    toBookingBoardEvent({
+  const records = result.event_records.map((event) =>
+    toBookingBoardRecord({
       event_type: event.event_type as typeof SLOT_RESERVED | typeof SLOT_CANCELLED,
       payload: event.payload,
     }),
   );
 
-  return projectBookingBoard(request, events);
+  return projectBookingBoard(request, records);
 };
