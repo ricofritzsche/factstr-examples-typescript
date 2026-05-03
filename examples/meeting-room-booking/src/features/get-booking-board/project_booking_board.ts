@@ -22,8 +22,9 @@ export const projectBookingBoard = (
   request: GetBookingBoardRequest,
   records: BookingBoardRecord[],
 ): BookingBoardResponse => {
-  const relevantRooms = new Set(request.room_ids);
-  const relevantSlots = new Set(request.slots);
+  // The query loads booking events for the day. The projection applies the board shape.
+  const boardRooms = new Set(request.room_ids);
+  const boardSlots = new Set(request.slots);
   const slotStates = new Map<string, SlotState>();
 
   for (const record of records) {
@@ -33,7 +34,7 @@ export const projectBookingBoard = (
       continue;
     }
 
-    if (!relevantRooms.has(room_id) || !relevantSlots.has(slot)) {
+    if (!boardRooms.has(room_id) || !boardSlots.has(slot)) {
       continue;
     }
 
