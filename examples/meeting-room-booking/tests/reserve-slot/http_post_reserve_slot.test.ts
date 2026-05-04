@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import factstrNode from '@factstr/factstr-node';
+import { FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
 import { httpPostReserveSlot } from '../../src/features/reserve-slot/http_post_reserve_slot';
-
-const { FactstrMemoryStore } = factstrNode;
 
 const buildRequest = (body: unknown) =>
   ({

@@ -1,11 +1,9 @@
-import factstrNode from '@factstr/factstr-node';
+import { FactstrMemoryStore } from '@factstr/factstr-node';
 import type { SlotCancelledEvent } from '../events/slot_cancelled';
 import { SLOT_CANCELLED } from '../events/slot_cancelled';
 import type { SlotReservedEvent } from '../events/slot_reserved';
 import { SLOT_RESERVED } from '../events/slot_reserved';
 import { defaultBoardDate } from './board_defaults';
-
-const { FactstrMemoryStore } = factstrNode;
 
 export const createStore = () => {
   const store = new FactstrMemoryStore();

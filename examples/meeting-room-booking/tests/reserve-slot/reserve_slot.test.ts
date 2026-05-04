@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { AppendIfResult, EventQuery, NewEvent } from '@factstr/factstr-node';
-import factstrNode from '@factstr/factstr-node';
+import { FactstrMemoryStore } from '@factstr/factstr-node';
 import { SLOT_CANCELLED } from '../../src/events/slot_cancelled';
 import { SLOT_RESERVED } from '../../src/events/slot_reserved';
 import { reserveSlot } from '../../src/features/reserve-slot/reserve_slot';
-
-const { FactstrMemoryStore } = factstrNode;
 
 const simulateConcurrentChangeDuringAppendIf = (
   store: InstanceType<typeof FactstrMemoryStore>,
